@@ -1,0 +1,23 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: scpi-inv-api
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: 'true'
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: {{ if .Values.ingressPrefix }}{{ .Values.ingressPrefix }}.{{ end }}scpi-inv-api.check-consulting.net
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: scpi-inv-api
+                port:
+                  number: 8080
+  tls:
+    - hosts:
+        - {{ if .Values.ingressPrefix }}{{ .Values.ingressPrefix }}.{{ end }}scpi-inv-api.check-consulting.net
+      secretName: scpi-inv-api-tls

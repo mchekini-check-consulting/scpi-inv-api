@@ -1,0 +1,6 @@
+services:
+  scpi-inv-api:
+    image: scpi-inv-api
+    container_name: scpi-inv-api
+    ports:
+      - "8080:8080"

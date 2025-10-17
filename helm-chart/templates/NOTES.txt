@@ -1,0 +1,1 @@
+SCPI INV API a été deployé avec succès

@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: scpi-inv-db
+  labels:
+    app: scpi-inv-db
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: scpi-inv-db
+  template:
+    metadata:
+      name: scpi-inv-db
+      labels:
+        app: scpi-inv-db
+    spec:
+      containers:
+        - name: scpi-inv-db
+          image: postgres
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 5432
+          env:
+            - name: POSTGRES_DB
+              value: scpi_invest_db
+            - name: POSTGRES_USER
+              value: scpi_admin
+            - name: POSTGRES_PASSWORD
+              value: changeme123
+      restartPolicy: Always
