@@ -11,6 +11,6 @@ public class HelloWorldResource {
 
     @GetMapping
     public String sayHello() {
-        return "Hello World v 1.0!";
+        return "Hello World v 2.0!";
     }
 }
