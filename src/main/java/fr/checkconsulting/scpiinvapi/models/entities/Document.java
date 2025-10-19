@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @SuperBuilder
-public class Document extends AuditableEntity {
+public class Document {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

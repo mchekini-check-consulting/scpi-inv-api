@@ -16,7 +16,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @SuperBuilder
-public class Scpi extends AuditableEntity {
+public class Scpi {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
