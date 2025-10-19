@@ -15,7 +15,7 @@ import java.math.BigDecimal;
 @NoArgsConstructor
 @AllArgsConstructor
 @SuperBuilder
-public class Localisation extends AuditableEntity {
+public class Localisation{
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

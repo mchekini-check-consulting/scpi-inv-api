@@ -15,7 +15,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @SuperBuilder
-public class Investisseur extends AuditableEntity {
+public class Investisseur{
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

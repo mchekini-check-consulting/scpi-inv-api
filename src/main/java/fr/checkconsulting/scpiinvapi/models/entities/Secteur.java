@@ -15,7 +15,7 @@ import java.math.BigDecimal;
 @NoArgsConstructor
 @AllArgsConstructor
 @SuperBuilder
-public class Secteur extends AuditableEntity{
+public class Secteur{
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

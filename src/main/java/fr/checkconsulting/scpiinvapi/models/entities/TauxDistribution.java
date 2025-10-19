@@ -15,7 +15,7 @@ import java.math.BigDecimal;
 @NoArgsConstructor
 @AllArgsConstructor
 @SuperBuilder
-public class TauxDistribution extends AuditableEntity{
+public class TauxDistribution{
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

@@ -15,7 +15,7 @@ import java.math.BigDecimal;
 @NoArgsConstructor
 @AllArgsConstructor
 @SuperBuilder
-public class DecoteDemembrement extends AuditableEntity{
+public class DecoteDemembrement{
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

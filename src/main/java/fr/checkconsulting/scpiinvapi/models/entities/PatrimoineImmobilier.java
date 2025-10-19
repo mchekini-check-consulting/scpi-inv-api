@@ -13,7 +13,7 @@ import lombok.experimental.SuperBuilder;
 @NoArgsConstructor
 @AllArgsConstructor
 @SuperBuilder
-public class PatrimoineImmobiliers extends AuditableEntity {
+public class PatrimoineImmobilier {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
