@@ -1,0 +1,23 @@
+server:
+  servlet:
+    context-path: /api
+
+spring:
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+  application:
+    name: scpi-inv-api
+    jpa:
+      database: postgresql
+      properties:
+        hibernate:
+          dialect: org.hibernate.dialect.PostgreSQLDialect
+      hibernate:
+        ddl-auto: update
+  datasource:
+    password: password
+    username: user
+    url: jdbc:postgresql://localhost:5432/db
+    hikari:
+      schema: scpi
