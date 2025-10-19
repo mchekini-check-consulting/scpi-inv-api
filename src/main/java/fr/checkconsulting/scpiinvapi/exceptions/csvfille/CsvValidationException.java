@@ -13,4 +13,10 @@ public class CsvValidationException extends RuntimeException {
         this.lineNumber = lineNumber;
 
     }
+
+    public CsvValidationException(String message, Throwable cause) {
+        super(message, cause);
+        this.columnName = null;
+        this.lineNumber = -1;
+    }
 }
