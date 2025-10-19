@@ -29,6 +29,11 @@ spring:
       hibernate:
         format_sql: true
 
+  batch:
+    initialize-schema: never
+    job:
+      enabled: false
+
 logging:
   level:
     org.flywaydb.core: INFO

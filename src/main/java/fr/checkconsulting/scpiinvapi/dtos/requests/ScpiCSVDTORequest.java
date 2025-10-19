@@ -53,6 +53,8 @@ public class ScpiCSVDTORequest {
     @NotBlank
     private String publicite;
 
+    private Integer lineNumber;
+
     private List<LocalisationDTORequest> localisations;
 
     private List<SecteurDTORequest> secteurs;
