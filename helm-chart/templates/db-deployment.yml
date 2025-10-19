@@ -23,9 +23,9 @@ spec:
             - containerPort: 5432
           env:
             - name: POSTGRES_DB
-              value: scpi_invest_db
+              value: scpi_inv_db
             - name: POSTGRES_USER
-              value: scpi_admin
+              value: admin
             - name: POSTGRES_PASSWORD
-              value: changeme123
+              value: admin
       restartPolicy: Always
