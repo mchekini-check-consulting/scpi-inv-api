@@ -1,4 +1,4 @@
-package fr.checkconsulting.scpiinvapi.exceptions.csvfille;
+package fr.checkconsulting.scpiinvapi.batch.exceptions.csvfille;
 
 public class CsvFileNotFoundException extends RuntimeException {
     public CsvFileNotFoundException(String message) {

@@ -6,7 +6,7 @@ public final class ScpiImportConstants {
     private ScpiImportConstants() { ////j'empêche l'instanciation
     }
 
-    public static final String CSV_SCPI_PATH = "data/catalogue_scpis.csv";
+    public static final String CSV_SCPI_PATH = "data/catalogue_scpis_erronnes.csv";
 
     public static final List<String> EXPECTED_HEADERS = List.of(
             "Nom", "Taux_distribution", "Minimum_souscription",

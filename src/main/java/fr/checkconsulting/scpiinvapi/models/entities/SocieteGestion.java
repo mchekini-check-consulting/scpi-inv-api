@@ -7,6 +7,8 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 
+import java.util.List;
+
 @Entity
 @Getter
 @Setter
@@ -21,7 +23,6 @@ public class SocieteGestion{
     @Column(name="nom",nullable = false)
     private String nom;
 
-    @ManyToOne
-    @JoinColumn(name = "scpi_id")
-    private Scpi scpi;
+    @OneToMany(mappedBy = "societeGestion", cascade = CascadeType.ALL)
+    private List<Scpi> scpis;
 }
