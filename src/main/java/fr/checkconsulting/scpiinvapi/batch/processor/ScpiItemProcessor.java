@@ -145,7 +145,7 @@ public class ScpiItemProcessor implements ItemProcessor<ScpiCSVDTORequest, Scpi>
         if (!StringUtils.hasText(item.getBic()))
             throw new CsvValidationException("Le BIC est obligatoire", "bic", lineNumber);
     }
-
+// il me rste encore dautres
 
     private void validateLocalisationPercentage(ScpiCSVDTORequest item, int lineNumber) {
         if (item.getLocalisations() == null || item.getLocalisations().isEmpty()) {
