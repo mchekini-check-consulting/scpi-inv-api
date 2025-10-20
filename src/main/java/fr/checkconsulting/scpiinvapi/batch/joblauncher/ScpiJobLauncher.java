@@ -30,7 +30,7 @@ public class ScpiJobLauncher {
 
             log.info("*************************Lancement du job SCPI**********************");
             jobLauncher.run(importScpiJob, jobParameters);
-            log.info("Job SCPI lancé avec succès !");
+            log.info("**************************Job SCPI lancé avec succès ****************");
         } catch (JobExecutionAlreadyRunningException | JobRestartException |
                  JobInstanceAlreadyCompleteException | JobParametersInvalidException e) {
             log.error("Erreur lors du lancement du job SCPI", e);
