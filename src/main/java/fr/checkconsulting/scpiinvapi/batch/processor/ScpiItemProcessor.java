@@ -1,39 +1,123 @@
 package fr.checkconsulting.scpiinvapi.batch.processor;
 
+import fr.checkconsulting.scpiinvapi.batch.reports.CsvErrorCollector;
+import fr.checkconsulting.scpiinvapi.batch.reports.CsvErrorReport;
 import fr.checkconsulting.scpiinvapi.dtos.requests.LocalisationDTORequest;
 import fr.checkconsulting.scpiinvapi.dtos.requests.ScpiCSVDTORequest;
-import fr.checkconsulting.scpiinvapi.exceptions.csvfille.CsvValidationException;
+import fr.checkconsulting.scpiinvapi.batch.exceptions.csvfille.CsvValidationException;
+import fr.checkconsulting.scpiinvapi.models.entities.*;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.item.ItemProcessor;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
+import java.math.BigDecimal;
+import java.util.ArrayList;
+
 @Component
-public class ScpiItemProcessor implements ItemProcessor<ScpiCSVDTORequest, ScpiCSVDTORequest> {
+@Slf4j
+@RequiredArgsConstructor
+public class ScpiItemProcessor implements ItemProcessor<ScpiCSVDTORequest, Scpi> {
+    private final CsvErrorCollector csverrorCollector;
+
+
     @Override
-    public ScpiCSVDTORequest process(ScpiCSVDTORequest item) throws Exception {
+    public Scpi process(ScpiCSVDTORequest scpiCsvDto) throws Exception {
 
-        int lineNumber = item.getLineNumber() != null ? item.getLineNumber() : -1;
-
-
-        validateRequiredFields(item, lineNumber);
-
-        validateLocalisationPercentage(item, lineNumber);
+        int lineNumber = scpiCsvDto.getLineNumber() != null ? scpiCsvDto.getLineNumber() : -1;
 
 
-        ScpiCSVDTORequest scpi = new ScpiCSVDTORequest();
-        scpi.setNom(item.getNom());
-        scpi.setMinimumSouscription(item.getMinimumSouscription());
-        scpi.setCapitalisation(item.getCapitalisation());
-        scpi.setFraisSouscription(item.getFraisSouscription());
-        scpi.setFraisGestion(item.getFraisGestion());
-        scpi.setDelaiJouissance(item.getDelaiJouissance());
-        scpi.setFrequenceLoyers(item.getFrequenceLoyers());
-        scpi.setIban(item.getIban());
-        scpi.setBic(item.getBic());
-        scpi.setDemembrement(item.getDemembrement());
-        scpi.setCashback(item.getCashback());
-        scpi.setVersementProgramme(item.getVersementProgramme());
-        scpi.setPublicite(item.getPublicite());
+        try {
+
+            validateRequiredFields(scpiCsvDto, lineNumber);
+            validateLocalisationPercentage(scpiCsvDto, lineNumber);
+
+        } catch (CsvValidationException e) {
+            log.error("Erreur à la ligne {} (colonne '{}') : {}", e.getLineNumber(), e.getColumnName(), e.getMessage());
+            csverrorCollector.addError(new CsvErrorReport(e.getLineNumber(), e.getColumnName(), e.getMessage()));
+            return null;
+        }
+
+
+        validateLocalisationPercentage(scpiCsvDto, lineNumber);
+
+        Scpi scpi = Scpi.builder()
+                .nom(scpiCsvDto.getNom())
+                .minimumSouscription(scpiCsvDto.getMinimumSouscription())
+                .capitalisation(scpiCsvDto.getCapitalisation() != null ? scpiCsvDto.getCapitalisation().longValue() : null)
+                .fraisSouscription(scpiCsvDto.getFraisSouscription())
+                .fraisGestion(scpiCsvDto.getFraisGestion())
+                .delaiJouissance(scpiCsvDto.getDelaiJouissance())
+                .frequenceLoyers(scpiCsvDto.getFrequenceLoyers())
+                .iban(scpiCsvDto.getIban())
+                .bic(scpiCsvDto.getBic())
+                .demembrement(scpiCsvDto.getDemembrement())
+                .cashback(scpiCsvDto.getCashback())
+                .versementProgramme(scpiCsvDto.getVersementProgramme())
+                .publicite(scpiCsvDto.getPublicite())
+                .localisations(new ArrayList<>())
+                .secteurs(new ArrayList<>())
+                .tauxDistributions(new ArrayList<>())
+                .valeursScpi(new ArrayList<>())
+                .build();
+
+        ValeursScpi valeurs = ValeursScpi.builder()
+                .prixPart(scpiCsvDto.getPrixPart())
+                .valeurReconstitution(scpiCsvDto.getValeurReconstitution())
+                .scpi(scpi)
+                .build();
+        scpi.getValeursScpi().add(valeurs);
+
+        if (scpiCsvDto.getLocalisations() != null) {
+            scpiCsvDto.getLocalisations().forEach(locDto -> {
+                Localisation loc = Localisation.builder()
+                        .pays(locDto.getPays())
+                        .pourcentage(locDto.getPourcentage() != null
+                                ? BigDecimal.valueOf(locDto.getPourcentage())
+                                : null)
+                        .scpi(scpi)
+                        .build();
+                scpi.getLocalisations().add(loc);
+            });
+        }
+
+        if (scpiCsvDto.getSecteurs() != null) {
+            scpiCsvDto.getSecteurs().forEach(secDto -> {
+                Secteur sec = Secteur.builder()
+                        .secteur(secDto.getSecteur())
+                        .pourcentage(secDto.getPourcentage() != null
+                                ? BigDecimal.valueOf(secDto.getPourcentage())
+                                : null)
+                        .scpi(scpi)
+                        .build();
+                scpi.getSecteurs().add(sec);
+            });
+        }
+
+        if (scpiCsvDto.getTauxDistributions() != null) {
+            scpiCsvDto.getTauxDistributions().forEach(tdDto -> {
+                TauxDistribution td = TauxDistribution.builder()
+                        .tauxDistribution(tdDto.getTauxDistribution())
+                        .annee(tdDto.getAnnee())
+                        .scpi(scpi)
+                        .build();
+                scpi.getTauxDistributions().add(td);
+            });
+        }
+
+        if (scpiCsvDto.getDecotesDemembrement() != null) {
+            scpiCsvDto.getDecotesDemembrement().forEach(decoteDto -> {
+                DecoteDemembrement decote = DecoteDemembrement.builder()
+                        .dureeAnnee(decoteDto.getDureeAnnee())
+                        .pourcentage(decoteDto.getPourcentage() != null
+                                ? BigDecimal.valueOf(decoteDto.getPourcentage())
+                                : null)
+                        .scpi(scpi)
+                        .build();
+                scpi.getDecotesDemembrement().add(decote);
+            });
+        }
 
 
         return scpi;

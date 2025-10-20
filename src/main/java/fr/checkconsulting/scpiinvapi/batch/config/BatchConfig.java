@@ -1,10 +1,13 @@
 package fr.checkconsulting.scpiinvapi.batch.config;
 
 import fr.checkconsulting.scpiinvapi.batch.constants.ScpiImportConstants;
+import fr.checkconsulting.scpiinvapi.batch.exceptions.csvfille.CsvValidationException;
+import fr.checkconsulting.scpiinvapi.batch.listener.CsvErrorReportListener;
 import fr.checkconsulting.scpiinvapi.batch.mappers.ScpiFieldSetMapper;
 import fr.checkconsulting.scpiinvapi.batch.processor.ScpiItemProcessor;
 import fr.checkconsulting.scpiinvapi.batch.writter.ScpiItemWriter;
 import fr.checkconsulting.scpiinvapi.dtos.requests.ScpiCSVDTORequest;
+import fr.checkconsulting.scpiinvapi.models.entities.Scpi;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.Job;
@@ -34,6 +37,7 @@ public class BatchConfig {
     @Bean
     public FlatFileItemReader<ScpiCSVDTORequest> scpiReader() throws IOException {
 
+
         List<String> headersForTokenizer = validateAndNormalizeHeaders();
 
         DelimitedLineTokenizer tokenizer = new DelimitedLineTokenizer();
@@ -42,13 +46,26 @@ public class BatchConfig {
         tokenizer.setStrict(false);
         tokenizer.setNames(headersForTokenizer.toArray(String[]::new));
 
-        return new FlatFileItemReaderBuilder<ScpiCSVDTORequest>()
-                .name("scpiReader")
-                .resource(new ClassPathResource(ScpiImportConstants.CSV_SCPI_PATH))
-                .linesToSkip(1)
-                .lineTokenizer(tokenizer)
-                .fieldSetMapper(new ScpiFieldSetMapper())
-                .build();
+        FlatFileItemReader<ScpiCSVDTORequest> reader = new FlatFileItemReader<>();
+        reader.setResource(new ClassPathResource(ScpiImportConstants.CSV_SCPI_PATH));
+        reader.setLinesToSkip(1);
+
+        reader.setLineMapper((line, lineNumber) -> {
+            var fieldSet = tokenizer.tokenize(line);
+            var mapper = new ScpiFieldSetMapper();
+            try {
+                var scpi = mapper.mapFieldSet(fieldSet);
+                scpi.setLineNumber((int) lineNumber);
+                return scpi;
+            } catch (Exception e) {
+                log.error("Erreur lors du mappage du CSV à la ligne {} : {}", lineNumber, e.getMessage());
+                throw new CsvValidationException(
+                        "Erreur à la ligne " + lineNumber + " : " + e.getMessage(), e
+                );
+            }
+        });
+        return reader;
+
     }
 
     private List<String> validateAndNormalizeHeaders() throws IOException {
@@ -101,12 +118,14 @@ public class BatchConfig {
                                PlatformTransactionManager transactionManager,
                                FlatFileItemReader<ScpiCSVDTORequest> reader,
                                ScpiItemProcessor processor,
-                               ScpiItemWriter writer) {
+                               ScpiItemWriter writer,
+                               CsvErrorReportListener errorListener) {
         return new StepBuilder("importScpiStep", jobRepository)
-                .<ScpiCSVDTORequest, ScpiCSVDTORequest>chunk(10, transactionManager)
+                .<ScpiCSVDTORequest, Scpi>chunk(10, transactionManager)
                 .reader(reader)
                 .processor(processor)
                 .writer(writer)
+                .listener(errorListener)
                 .build();
     }
 

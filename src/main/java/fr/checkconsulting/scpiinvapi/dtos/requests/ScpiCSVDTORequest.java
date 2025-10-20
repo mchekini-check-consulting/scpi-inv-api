@@ -16,12 +16,22 @@ public class ScpiCSVDTORequest {
     @NotBlank
     private String nom;
 
+    private List<TauxDistributionDTORequest> tauxDistributions;
+
     @NotNull
     private Integer minimumSouscription;
+
+    private List<LocalisationDTORequest> localisations;
+
+    private List<SecteurDTORequest> secteurs;
+
+    @NotNull
+    private BigDecimal prixPart;
 
     @NotNull
     private BigDecimal capitalisation;
 
+    private String gerant;
 
     @NotNull
     private BigDecimal fraisSouscription;
@@ -35,11 +45,16 @@ public class ScpiCSVDTORequest {
     @NotBlank
     private String frequenceLoyers;
 
+    @NotNull
+    private BigDecimal valeurReconstitution;
+
     @NotBlank
     private String iban;
 
     @NotBlank
     private String bic;
+
+    private List<DecoteDemembrementDTORequest> decotesDemembrement;
 
     @NotNull
     private Boolean demembrement;
@@ -55,13 +70,6 @@ public class ScpiCSVDTORequest {
 
     private Integer lineNumber;
 
-    private List<LocalisationDTORequest> localisations;
-
-    private List<SecteurDTORequest> secteurs;
-
-    private List<TauxDistributionDTORequest> tauxDistributions;
-
     private List<ValeursScpiDTORequest> valeursScpi;
 
-    private List<DecoteDemembrementDTORequest> decotesDemembrement;
 }
