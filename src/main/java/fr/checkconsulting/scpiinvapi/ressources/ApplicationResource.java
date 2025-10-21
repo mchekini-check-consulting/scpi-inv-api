@@ -21,7 +21,7 @@ public class ApplicationResource {
     @GetMapping("info")
     public String getApplicationInfo() {
         return String.format(
-                "Application: %s | Version: %s | Message: %s",
+                "Application: %s || Version: %s || Message: %s",
                 appName, appVersion, appMessage
         );
     }
