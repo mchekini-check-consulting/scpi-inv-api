@@ -1,4 +1,5 @@
 package fr.checkconsulting.scpiinvapi.Config;
+
 import org.keycloak.admin.client.Keycloak;
 import org.keycloak.admin.client.KeycloakBuilder;
 import org.keycloak.admin.client.resource.RealmResource;
@@ -30,14 +31,7 @@ public class KeycloakAdminConfig {
 
     @Bean
     public Keycloak keycloak() {
-        return KeycloakBuilder.builder()
-                .serverUrl(authServerUrl)
-                .realm(realm)
-                .username(adminUsername)
-                .password(adminPassword)
-                .clientId(clientId)
-                .grantType(OAuth2Constants.PASSWORD)
-                .build();
+        return KeycloakBuilder.builder().serverUrl(authServerUrl).realm(realm).username(adminUsername).password(adminPassword).clientId(clientId).grantType(OAuth2Constants.PASSWORD).build();
     }
 
     @Bean

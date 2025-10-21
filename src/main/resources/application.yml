@@ -1,25 +1,7 @@
 
 spring:
   application:
-    name: spring.application.name=scpi-inv-api
-
-  datasource:
-    url: jdbc:postgresql://localhost:5432/databaseApp
-    username: postgres
-    password: admin
-
-  sql:
-    init:
-      mode: always
-      continue-on-error: true
-
-  jpa:
-    hibernate:
-      ddl-auto: create-drop
-    database-platform: org.hibernate.dialect.PostgreSQLDialect
-    properties:
-      hibernate:
-        dialect: org.hibernate.dialect.PostgreSQLDialect
+    name: scpi-inv-api
 
   security:
     oauth2:

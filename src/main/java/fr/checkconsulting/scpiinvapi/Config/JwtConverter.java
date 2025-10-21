@@ -32,10 +32,7 @@ public class JwtConverter implements Converter<Jwt, AbstractAuthenticationToken>
     @Override
     public AbstractAuthenticationToken convert(Jwt jwt) {
         // Conversion des rôles (authorities)
-        Collection<GrantedAuthority> authorities = Stream.concat(
-                jwtGrantedAuthoritiesConverter.convert(jwt).stream(),
-                extractRessourceRoles(jwt).stream()
-        ).collect(Collectors.toSet());
+        Collection<GrantedAuthority> authorities = Stream.concat(jwtGrantedAuthoritiesConverter.convert(jwt).stream(), extractRessourceRoles(jwt).stream()).collect(Collectors.toSet());
 
         return new JwtAuthenticationToken(jwt, authorities, getPrincipalClaimName(jwt));
     }
@@ -49,9 +46,7 @@ public class JwtConverter implements Converter<Jwt, AbstractAuthenticationToken>
             if (resource != null) {
                 Collection<String> resourceRoles = (Collection<String>) resource.get("roles");
                 if (resourceRoles != null) {
-                    authorities.addAll(resourceRoles.stream()
-                            .map(role -> new SimpleGrantedAuthority("ROLE_" + role.toUpperCase()))
-                            .collect(Collectors.toSet()));
+                    authorities.addAll(resourceRoles.stream().map(role -> new SimpleGrantedAuthority("ROLE_" + role.toUpperCase())).collect(Collectors.toSet()));
                 }
             }
         }
@@ -61,18 +56,17 @@ public class JwtConverter implements Converter<Jwt, AbstractAuthenticationToken>
         if (realmAccess != null) {
             Collection<String> realmRoles = (Collection<String>) realmAccess.get("roles");
             if (realmRoles != null) {
-                authorities.addAll(realmRoles.stream()
-                        .map(role -> new SimpleGrantedAuthority("ROLE_" + role.toUpperCase()))
-                        .collect(Collectors.toSet()));
+                authorities.addAll(realmRoles.stream().map(role -> new SimpleGrantedAuthority("ROLE_" + role.toUpperCase())).collect(Collectors.toSet()));
             }
         }
 
         return authorities;
     }
+
     private String getPrincipalClaimName(Jwt jwt) {
         String claimName = JWTClaimNames.SUBJECT;
 
-        if(jwtConverterProperties.getPrincipalAttribute() != null){
+        if (jwtConverterProperties.getPrincipalAttribute() != null) {
             claimName = jwtConverterProperties.getPrincipalAttribute();
         }
         return jwt.getClaim(claimName);
