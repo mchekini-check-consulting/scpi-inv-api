@@ -1,7 +1,7 @@
-image:
-  tag: latest
-  repo: mchekini
-  name: scpi-inv-api
+  image:
+    tag: latest
+    repo: mchekini
+    name: scpi-inv-api
 
-application:
-  environment: int
+  application:
+    environment: int

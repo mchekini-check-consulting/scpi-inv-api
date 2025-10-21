@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <springProperty name="APP_NAME" source="spring.application.name" defaultValue="scpi-inv-api"/>
+    <springProperty name="LOKI_URL" source="loki.url" defaultValue="http://loki.logging.svc.cluster.local:3100"/>
+    <springProperty name="ENV" source="application.environment" defaultValue="prod"/>
+
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <appender name="LOKI" class="com.grafana.loki.client.logback.LokiAppender">
+        <url>${LOKI_URL}/loki/api/v1/push</url>
+        <batchSize>100</batchSize>
+        <batchTimeoutMs>5000</batchTimeoutMs>
+        <connectionTimeoutMs>30000</connectionTimeoutMs>
+        <requestTimeoutMs>5000</requestTimeoutMs>
+        <staticLabels>app=${APP_NAME},service=backend,env=${ENV}</staticLabels>
+        <encoder class="ch.qos.logback.core.encoder.LayoutWrappingEncoder">
+            <layout class="net.logstash.logback.layout.LogstashLayout">
+                <customFields>{"service":"backend","environment":"${ENV}"}</customFields>
+            </layout>
+        </encoder>
+    </appender>
+
+    <appender name="ASYNC_LOKI" class="ch.qos.logback.classic.AsyncAppender">
+        <appender-ref ref="LOKI"/>
+        <queueSize>512</queueSize>
+        <discardingThreshold>0</discardingThreshold>
+        <includeCallerData>false</includeCallerData>
+    </appender>
+
+    <root level="INFO">
+        <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="ASYNC_LOKI"/>
+    </root>
+
+    <logger name="fr.checkconsulting.scpi" level="INFO"/>
+    <logger name="org.springframework.web" level="INFO"/>
+    <logger name="org.springframework.boot" level="INFO"/>
+
+</configuration>
