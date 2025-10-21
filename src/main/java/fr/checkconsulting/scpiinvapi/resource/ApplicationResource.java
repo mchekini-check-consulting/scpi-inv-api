@@ -1,4 +1,4 @@
-package fr.checkconsulting.scpiinvapi.ressources;
+package fr.checkconsulting.scpiinvapi.resource;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.GetMapping;
