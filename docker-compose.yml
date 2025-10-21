@@ -4,3 +4,14 @@ services:
     container_name: scpi-inv-api
     ports:
       - "8080:8080"
+
+
+  scpi-inv-db:
+    image: postgres
+    container_name: postgres
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=postgres
+    ports:
+      - "5432:5432"

@@ -1,169 +1,191 @@
 package fr.checkconsulting.scpiinvapi.batch.processor;
 
-import fr.checkconsulting.scpiinvapi.batch.reports.CsvErrorCollector;
-import fr.checkconsulting.scpiinvapi.batch.reports.CsvErrorReport;
-import fr.checkconsulting.scpiinvapi.dtos.requests.LocalisationDTORequest;
-import fr.checkconsulting.scpiinvapi.dtos.requests.ScpiCSVDTORequest;
-import fr.checkconsulting.scpiinvapi.batch.exceptions.csvfille.CsvValidationException;
-import fr.checkconsulting.scpiinvapi.models.entities.*;
-import lombok.RequiredArgsConstructor;
+import fr.checkconsulting.scpiinvapi.dto.request.ScpiDto;
+import fr.checkconsulting.scpiinvapi.model.entity.*;
+import io.micrometer.common.lang.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.item.ItemProcessor;
 import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.List;
 
 @Component
 @Slf4j
-@RequiredArgsConstructor
-public class ScpiItemProcessor implements ItemProcessor<ScpiCSVDTORequest, Scpi> {
-    private final CsvErrorCollector csverrorCollector;
-
+public class ScpiItemProcessor implements ItemProcessor<ScpiDto, Scpi> {
 
     @Override
-    public Scpi process(ScpiCSVDTORequest scpiCsvDto) throws Exception {
-
-        int lineNumber = scpiCsvDto.getLineNumber() != null ? scpiCsvDto.getLineNumber() : -1;
-
-
-        try {
-
-            validateRequiredFields(scpiCsvDto, lineNumber);
-            validateLocalisationPercentage(scpiCsvDto, lineNumber);
-
-        } catch (CsvValidationException e) {
-            log.error("Erreur à la ligne {} (colonne '{}') : {}", e.getLineNumber(), e.getColumnName(), e.getMessage());
-            csverrorCollector.addError(new CsvErrorReport(e.getLineNumber(), e.getColumnName(), e.getMessage()));
-            return null;
-        }
-
-
-        validateLocalisationPercentage(scpiCsvDto, lineNumber);
+    public Scpi process(@NonNull ScpiDto scpiDto) {
 
         Scpi scpi = Scpi.builder()
-                .nom(scpiCsvDto.getNom())
-                .minimumSouscription(scpiCsvDto.getMinimumSouscription())
-                .capitalisation(scpiCsvDto.getCapitalisation() != null ? scpiCsvDto.getCapitalisation().longValue() : null)
-                .fraisSouscription(scpiCsvDto.getFraisSouscription())
-                .fraisGestion(scpiCsvDto.getFraisGestion())
-                .delaiJouissance(scpiCsvDto.getDelaiJouissance())
-                .frequenceLoyers(scpiCsvDto.getFrequenceLoyers())
-                .iban(scpiCsvDto.getIban())
-                .bic(scpiCsvDto.getBic())
-                .demembrement(scpiCsvDto.getDemembrement())
-                .cashback(scpiCsvDto.getCashback())
-                .versementProgramme(scpiCsvDto.getVersementProgramme())
-                .publicite(scpiCsvDto.getPublicite())
-                .localisations(new ArrayList<>())
-                .secteurs(new ArrayList<>())
-                .tauxDistributions(new ArrayList<>())
-                .valeursScpi(new ArrayList<>())
+                .name(scpiDto.getName())
+                .minimumSubscription(scpiDto.getMinimumSubscription())
+                .manager(scpiDto.getManager())
+                .capitalization(scpiDto.getCapitalization())
+                .subscriptionFees(scpiDto.getSubscriptionFees())
+                .rentFrequency(scpiDto.getRentFrequency())
+                .managementFees(scpiDto.getManagementFees())
+                .enjoymentDelay(scpiDto.getEnjoymentDelay())
+                .iban(scpiDto.getIban())
+                .bic(scpiDto.getBic())
+                .cashback(scpiDto.getCashback())
+                .advertising(scpiDto.getAdvertising())
                 .build();
 
-        ValeursScpi valeurs = ValeursScpi.builder()
-                .prixPart(scpiCsvDto.getPrixPart())
-                .valeurReconstitution(scpiCsvDto.getValeurReconstitution())
-                .scpi(scpi)
-                .build();
-        scpi.getValeursScpi().add(valeurs);
-
-        if (scpiCsvDto.getLocalisations() != null) {
-            scpiCsvDto.getLocalisations().forEach(locDto -> {
-                Localisation loc = Localisation.builder()
-                        .pays(locDto.getPays())
-                        .pourcentage(locDto.getPourcentage() != null
-                                ? BigDecimal.valueOf(locDto.getPourcentage())
-                                : null)
-                        .scpi(scpi)
-                        .build();
-                scpi.getLocalisations().add(loc);
-            });
+        if ("Oui".equals(scpiDto.getDismemberment())) {
+            scpi.setDismemberment(true);
+        } else if ("Non".equals(scpiDto.getDismemberment())) {
+            scpi.setDismemberment(false);
         }
 
-        if (scpiCsvDto.getSecteurs() != null) {
-            scpiCsvDto.getSecteurs().forEach(secDto -> {
-                Secteur sec = Secteur.builder()
-                        .secteur(secDto.getSecteur())
-                        .pourcentage(secDto.getPourcentage() != null
-                                ? BigDecimal.valueOf(secDto.getPourcentage())
-                                : null)
-                        .scpi(scpi)
-                        .build();
-                scpi.getSecteurs().add(sec);
-            });
+
+        if ("Oui".equals(scpiDto.getScheduledPayment())) {
+            scpi.setScheduledPayment(true);
+        } else if ("Non".equals(scpiDto.getScheduledPayment())) {
+            scpi.setScheduledPayment(false);
         }
 
-        if (scpiCsvDto.getTauxDistributions() != null) {
-            scpiCsvDto.getTauxDistributions().forEach(tdDto -> {
-                TauxDistribution td = TauxDistribution.builder()
-                        .tauxDistribution(tdDto.getTauxDistribution())
-                        .annee(tdDto.getAnnee())
-                        .scpi(scpi)
-                        .build();
-                scpi.getTauxDistributions().add(td);
-            });
-        }
 
-        if (scpiCsvDto.getDecotesDemembrement() != null) {
-            scpiCsvDto.getDecotesDemembrement().forEach(decoteDto -> {
-                DecoteDemembrement decote = DecoteDemembrement.builder()
-                        .dureeAnnee(decoteDto.getDureeAnnee())
-                        .pourcentage(decoteDto.getPourcentage() != null
-                                ? BigDecimal.valueOf(decoteDto.getPourcentage())
-                                : null)
-                        .scpi(scpi)
-                        .build();
-                scpi.getDecotesDemembrement().add(decote);
-            });
-        }
-
+        setLocations(scpiDto, scpi);
+        setSectors(scpiDto, scpi);
+        setDistributionRates(scpiDto, scpi);
+        setDismembermentDiscounts(scpiDto, scpi);
+        setScpiPartValues(scpiDto, scpi);
 
         return scpi;
     }
 
-    private void validateRequiredFields(ScpiCSVDTORequest item, int lineNumber) {
-        if (!StringUtils.hasText(item.getNom()))
-            throw new CsvValidationException("Le nom est obligatoire", "nom", lineNumber);
 
-        if (item.getMinimumSouscription() == null)
-            throw new CsvValidationException("Le minimum de souscription est obligatoire", "minimum_souscription", lineNumber);
+    private void setSectors(ScpiDto dto, Scpi scpi) {
+        List<Sector> sectors = new ArrayList<>();
 
-        if (item.getCapitalisation() == null)
-            throw new CsvValidationException("La capitalisation est obligatoire", "capitalisation", lineNumber);
+        if (dto.getSectors() != null && !dto.getSectors().isBlank()) {
+            String[] parts = dto.getSectors().split(",");
 
-        if (item.getFraisSouscription() == null)
-            throw new CsvValidationException("Les frais de souscription sont obligatoires", "frais_souscription", lineNumber);
+            for (int i = 0; i < parts.length; i += 2) {
+                String name = parts[i].trim();
+                BigDecimal percentage = new BigDecimal(parts[i + 1].trim());
 
-        if (item.getFraisGestion() == null)
-            throw new CsvValidationException("Les frais de gestion sont obligatoires", "frais_gestion", lineNumber);
+                Sector sector = Sector.builder()
+                        .name(name)
+                        .percentage(percentage)
+                        .scpi(scpi)
+                        .build();
 
-        if (!StringUtils.hasText(item.getIban()))
-            throw new CsvValidationException("L’IBAN est obligatoire", "iban", lineNumber);
+                sectors.add(sector);
+                log.info("Sector ajouté : {} avec {}%", name, percentage);
+            }
+        }
 
-        if (!StringUtils.hasText(item.getBic()))
-            throw new CsvValidationException("Le BIC est obligatoire", "bic", lineNumber);
+        scpi.setSectors(sectors);
     }
-// il me rste encore dautres
 
-    private void validateLocalisationPercentage(ScpiCSVDTORequest item, int lineNumber) {
-        if (item.getLocalisations() == null || item.getLocalisations().isEmpty()) {
-            throw new CsvValidationException("Au moins une localisation est requise", "localisation", lineNumber);
+    private void setLocations(ScpiDto scpiDto, Scpi scpi) {
+        List<Location> locations = new ArrayList<>();
+
+        if (scpiDto.getLocations() != null && !scpiDto.getLocations().isBlank()) {
+            String[] parts = scpiDto.getLocations().split(",");
+
+            for (int i = 0; i < parts.length; i += 2) {
+                String country = parts[i].trim();
+                BigDecimal percentage = new BigDecimal(parts[i + 1].trim());
+
+                Location location = Location.builder()
+                        .country(country)
+                        .percentage(percentage)
+                        .scpi(scpi)
+                        .build();
+
+                locations.add(location);
+                log.info("Location ajoutée : {} avec {}%", country, percentage);
+            }
         }
 
-        double total = item.getLocalisations()
-                .stream()
-                .mapToDouble(LocalisationDTORequest::getPourcentage)
-                .sum();
+        scpi.setLocations(locations);
+    }
 
-        if (Math.abs(total - 100.0) > 0.01) {
-            throw new CsvValidationException(
-                    "Le total des pourcentages de localisation doit être égal à 100% (actuellement " + total + "%)",
-                    "localisation",
-                    lineNumber
-            );
+    private void setDistributionRates(ScpiDto dto, Scpi scpi) {
+        List<DistributionRate> rates = new ArrayList<>();
+
+        if (dto.getDistributedRate() != null && !dto.getDistributedRate().isBlank()) {
+            String[] parts = dto.getDistributedRate().split(",");
+
+            int year = LocalDateTime.now().getYear() - 1;
+
+            for (int i = 0; i < parts.length; i++) {
+                BigDecimal rate = new BigDecimal(parts[i].trim());
+
+                DistributionRate distributionRate = DistributionRate.builder()
+                        .year(year)
+                        .rate(rate)
+                        .scpi(scpi)
+                        .build();
+
+                year--;
+
+                rates.add(distributionRate);
+            }
         }
+
+        scpi.setDistributionRates(rates);
+    }
+
+    private void setDismembermentDiscounts(ScpiDto dto, Scpi scpi) {
+        List<DismembermentDiscounts> discounts = new ArrayList<>();
+
+        if (dto.getDismembermentDiscounts() != null && !dto.getDismembermentDiscounts().isBlank()) {
+            String[] parts = dto.getDismembermentDiscounts().split(",");
+
+            for (int i = 0; i < parts.length; i += 2) {
+                int durationYears = Integer.parseInt(parts[i].trim());
+                BigDecimal percentage = new BigDecimal(parts[i + 1].trim());
+
+                DismembermentDiscounts discount = DismembermentDiscounts.builder()
+                        .durationYears(durationYears)
+                        .percentage(percentage)
+                        .scpi(scpi)
+                        .build();
+
+                discounts.add(discount);
+            }
+        }
+
+        scpi.setDismembermentDiscounts(discounts);
+    }
+
+    private void setScpiPartValues(ScpiDto dto, Scpi scpi) {
+        List<ScpiPartValues> values = new ArrayList<>();
+
+        if (dto.getSharePrice() != null && !dto.getSharePrice().isBlank()) {
+            String[] sharePriceParts = dto.getSharePrice().split(",");
+            String[] reconstitutionValueParts = dto.getReconstitutionValue().split(",");
+
+
+            int year = LocalDateTime.now().getYear() - 1;
+
+            for (int i = 0; i < sharePriceParts.length; i++) {
+
+
+                BigDecimal sharePrice = new BigDecimal(sharePriceParts[i].trim());
+                BigDecimal reconstitutionValue = new BigDecimal(reconstitutionValueParts[i].trim());
+
+                ScpiPartValues value = ScpiPartValues.builder()
+                        .year(year)
+                        .sharePrice(sharePrice)
+                        .reconstitutionValue(reconstitutionValue)
+                        .scpi(scpi)
+                        .build();
+
+                year--;
+
+                values.add(value);
+            }
+        }
+
+        scpi.setScpiValues(values);
     }
 
 }
+

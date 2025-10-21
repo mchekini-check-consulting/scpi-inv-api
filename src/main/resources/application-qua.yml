@@ -1,0 +1,6 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://scpi-inv-db:5432/scpi_inv_db
+    username: admin
+    password: admin
+    driver-class-name: org.postgresql.Driver

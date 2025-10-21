@@ -3,37 +3,17 @@ spring:
     name: scpi-inv-api
 
   datasource:
-    url: jdbc:postgresql://localhost:5432/scpi_invest_db
-    username: scpi_admin
-    password: changeme123
+    url: jdbc:postgresql://localhost:5432/postgres
+    username: postgres
+    password: postgres
     driver-class-name: org.postgresql.Driver
-
-#  datasource:
-#    url: jdbc:postgresql://scpi-inv-db:5432/scpi_invest_db
-#    username: scpi_admin
-#    password: changeme123
-#    driver-class-name: org.postgresql.Driver
-
-  flyway:
-    enabled: true
-    baseline-on-migrate: true
-    locations: classpath:db/migrations
-    validate-on-migrate: true
-    out-of-order: false
-    clean-disabled: false
 
   jpa:
     hibernate:
-      ddl-auto: none
-    show-sql: true
+      ddl-auto: validate
     properties:
       hibernate:
-        format_sql: true
-
-  batch:
-    initialize-schema: always
-    job:
-      enabled: false
+        dialect: org.hibernate.dialect.PostgreSQLDialect
 
 logging:
   level:
