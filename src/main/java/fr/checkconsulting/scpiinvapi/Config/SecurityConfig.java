@@ -2,6 +2,7 @@ package fr.checkconsulting.scpiinvapi.Config;
 
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -20,6 +21,8 @@ import java.util.List;
 @EnableWebSecurity
 public class SecurityConfig {
 
+    @Value("${spring.security.oauth2.resourceserver.jwt.jwk-set-uri}")
+    private String jwkSetUri;
 
     private final JwtConverter jwtConverter;
 
@@ -32,14 +35,6 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable)
-                .exceptionHandling(ex -> ex
-                        .authenticationEntryPoint((req, res, e) ->
-                                res.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized"))
-                        .accessDeniedHandler((req, res, e) ->
-                                res.sendError(HttpServletResponse.SC_FORBIDDEN, "Forbidden"))
-                )
-                .sessionManagement(session ->
-                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/public/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/test/**").hasAuthority("ROLE_USER")
@@ -54,7 +49,7 @@ public class SecurityConfig {
 
     @Bean
     public JwtDecoder jwtDecoder() {
-        return NimbusJwtDecoder.withJwkSetUri("https://keycloak.check-consulting.net/realms/scpi-realm/protocol/openid-connect/certs").build();
+        return NimbusJwtDecoder.withJwkSetUri(jwkSetUri).build();
     }
 
 
