@@ -1,7 +1,8 @@
-package fr.checkconsulting.scpiinvapi.batch.mappers;
+package fr.checkconsulting.scpiinvapi.mapper;
 
-import fr.checkconsulting.scpiinvapi.model.entity.Scpi;
+import fr.checkconsulting.scpiinvapi.dto.response.ScpiSummaryDto;
 import fr.checkconsulting.scpiinvapi.model.entity.DistributionRate;
+import fr.checkconsulting.scpiinvapi.model.entity.Scpi;
 import org.mapstruct.*;
 
 import java.util.List;
@@ -13,6 +14,11 @@ public interface ScpiMapper {
     @Mapping(target = "distributionRates", ignore = true)
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     void updateScpi(@MappingTarget Scpi target, Scpi source);
+
+
+    ScpiSummaryDto toScpiSummaryDto(Scpi source);
+
+    List<ScpiSummaryDto> toScpiSummaryDto(List<Scpi> source);
 
     @AfterMapping
     default void mergeDistributionRates(@MappingTarget Scpi target, Scpi source) {
