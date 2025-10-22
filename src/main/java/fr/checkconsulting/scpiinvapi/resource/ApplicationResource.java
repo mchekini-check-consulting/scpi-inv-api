@@ -1,4 +1,4 @@
-package fr.checkconsulting.scpiinvapi.ressources;
+package fr.checkconsulting.scpiinvapi.resource;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -21,7 +21,7 @@ public class ApplicationResource {
     @GetMapping("info")
     public String getApplicationInfo() {
         return String.format(
-                "Application: %s | Version: %s | Message: %s",
+                "Application: %s || Version: %s || Message: %s",
                 appName, appVersion, appMessage
         );
     }
