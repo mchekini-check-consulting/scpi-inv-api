@@ -15,6 +15,11 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
 
+minio:
+  url: "http://localhost:9000"
+  access-Key: admin
+  secret-key: admin-admin
+
 logging:
   level:
     org.flywaydb.core: INFO
