@@ -8,6 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.item.Chunk;
 import org.springframework.batch.item.ItemWriter;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -21,33 +22,44 @@ public class ScpiItemWriter implements ItemWriter<Scpi> {
     private final ScpiMapper scpiMapper;
 
     @Override
+    @Transactional
     public void write(Chunk<? extends Scpi> chunk) {
         List<? extends Scpi> items = chunk.getItems();
 
-        if (items.isEmpty()) return;
+        if (items.isEmpty()) {
+            log.info("Aucune SCPI à traiter");
+            return;
+        }
 
         log.info("===== Début du traitement de {} SCPI(s) =====", items.size());
 
         int createdCount = 0;
         int updatedCount = 0;
+        int errorCount = 0;
 
         for (Scpi scpi : items) {
-            Optional<Scpi> existingOpt = scpiRepository.findByName(scpi.getName());
+            try {
+                Optional<Scpi> existingOpt = scpiRepository.findByName(scpi.getName());
 
-            if (existingOpt.isPresent()) {
-                Scpi existing = existingOpt.get();
-                scpiMapper.updateScpi(existing, scpi);
-                scpiRepository.save(existing);
-                updatedCount++;
-                log.debug("SCPI mise à jour : {}", existing.getName());
-            } else {
-                scpiRepository.save(scpi);
-                createdCount++;
-                log.debug("Nouvelle SCPI enregistrée : {}", scpi.getName());
+                if (existingOpt.isPresent()) {
+                    Scpi existing = existingOpt.get();
+                    scpiMapper.updateScpi(existing, scpi);
+                    scpiRepository.save(existing);
+                    updatedCount++;
+                    log.debug("SCPI mise à jour : {}", existing.getName());
+                } else {
+                    scpiRepository.save(scpi);
+                    createdCount++;
+                    log.debug("Nouvelle SCPI enregistrée : {}", scpi.getName());
+                }
+            } catch (Exception e) {
+                errorCount++;
+                log.error("Erreur lors du traitement de la SCPI: {}", scpi.getName(), e);
             }
-        }
 
-        log.info("===== Fin du traitement =====");
-        log.info("{} SCPI(s) ajoutée(s), {} SCPI(s) mise(s) à jour.\n", createdCount, updatedCount);
+            log.info("===== Fin du traitement =====");
+            log.info("Résultat: {} créée(s), {} mise(s) à jour, {} erreur(s)",
+                    createdCount, updatedCount, errorCount);
+        }
     }
 }
