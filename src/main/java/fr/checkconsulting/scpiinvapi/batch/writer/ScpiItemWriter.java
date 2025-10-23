@@ -1,6 +1,6 @@
 package fr.checkconsulting.scpiinvapi.batch.writer;
 
-import fr.checkconsulting.scpiinvapi.batch.mappers.ScpiMapper;
+import fr.checkconsulting.scpiinvapi.mapper.ScpiMapper;
 import fr.checkconsulting.scpiinvapi.model.entity.Scpi;
 import fr.checkconsulting.scpiinvapi.repository.ScpiRepository;
 import lombok.RequiredArgsConstructor;
