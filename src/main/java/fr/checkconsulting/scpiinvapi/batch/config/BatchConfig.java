@@ -1,5 +1,6 @@
 package fr.checkconsulting.scpiinvapi.batch.config;
 
+import fr.checkconsulting.scpiinvapi.batch.exception.MissingColumnException;
 import fr.checkconsulting.scpiinvapi.batch.processor.ScpiItemProcessor;
 
 import fr.checkconsulting.scpiinvapi.batch.reader.ScpiItemReader;
@@ -48,7 +49,7 @@ public class BatchConfig {
                 .writer(writer)
                 .faultTolerant()
                 .skipLimit(100)
-                .skip(Exception.class)
+                .skip(MissingColumnException.class)
                 .noSkip(FlatFileParseException.class)
                 .retry(TransientDataAccessException.class)
                 .retry(SocketTimeoutException.class)

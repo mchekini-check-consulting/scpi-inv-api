@@ -22,6 +22,6 @@ public class Sector {
     private BigDecimal percentage;
 
     @ManyToOne
-    @JoinColumn(name = "scpi_id")
+    @JoinColumn(name = "scpi_id",nullable = false)
     private Scpi scpi;
 }

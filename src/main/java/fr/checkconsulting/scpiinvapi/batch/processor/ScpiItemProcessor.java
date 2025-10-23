@@ -16,6 +16,7 @@ import java.util.List;
 @Slf4j
 public class ScpiItemProcessor implements ItemProcessor<ScpiDto, Scpi> {
 
+    private static final BigDecimal HUNDRED = new BigDecimal("100");
     @Override
     public Scpi process(@NonNull ScpiDto scpiDto) {
 
@@ -53,6 +54,10 @@ public class ScpiItemProcessor implements ItemProcessor<ScpiDto, Scpi> {
         setDistributionRates(scpiDto, scpi);
         setDismembermentDiscounts(scpiDto, scpi);
         setScpiPartValues(scpiDto, scpi);
+
+        if (!isValidPercentages(scpi)) {
+            return null;
+        }
 
         return scpi;
     }
@@ -185,6 +190,28 @@ public class ScpiItemProcessor implements ItemProcessor<ScpiDto, Scpi> {
         }
 
         scpi.setScpiValues(values);
+    }
+
+    private boolean isValidPercentages(Scpi scpi) {
+        BigDecimal sumLocations = scpi.getLocations().stream()
+                .map(Location::getPercentage)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        BigDecimal sumSectors = scpi.getSectors().stream()
+                .map(Sector::getPercentage)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        boolean valid = sumLocations.compareTo(HUNDRED) == 0 && sumSectors.compareTo(HUNDRED) == 0;
+
+        if (!valid) {
+            log.warn("SCPI '{}' ignorée : Localisations = {}%, Secteurs = {}% (doivent = 100%)",
+                    scpi.getName(), sumLocations, sumSectors);
+        } else {
+            log.info("Vérification réussie pour '{}': Localisations = {}%, Secteurs = {}%",
+                    scpi.getName(), sumLocations, sumSectors);
+        }
+
+        return valid;
     }
 
 }
