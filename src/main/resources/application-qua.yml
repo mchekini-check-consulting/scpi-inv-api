@@ -5,8 +5,7 @@ spring:
     password: admin
     driver-class-name: org.postgresql.Driver
 
-
 minio:
   url: "http://minio-service.minio.svc.cluster.local:9000"
-  access-Key: admin
+  access-key: admin
   secret-key: admin-admin
