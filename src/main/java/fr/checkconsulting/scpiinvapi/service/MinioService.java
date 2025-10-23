@@ -18,7 +18,7 @@ public class MinioService {
 
     public String uploadFile(MultipartFile file, String bucketName) throws Exception {
 
-        String fileName = System.currentTimeMillis() + "_" + file.getOriginalFilename();
+        String fileName = file.getOriginalFilename();
 
         try (InputStream inputStream = file.getInputStream()) {
             minioClient.putObject(
