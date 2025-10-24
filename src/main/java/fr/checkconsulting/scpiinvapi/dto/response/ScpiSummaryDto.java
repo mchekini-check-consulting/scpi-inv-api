@@ -18,10 +18,11 @@ public class ScpiSummaryDto {
     private String imageUrl;
     
     private Integer minimumSubscription;
-    private BigDecimal managementFees;
     private Integer cashback;
     private String advertising;
     
-    private String manager;
+    private BigDecimal distributionRate;
+    private String country;
+    
     
 }
