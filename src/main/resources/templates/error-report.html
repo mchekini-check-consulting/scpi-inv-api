@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Rapport d'Erreurs d'Importation SCPI</title>
+
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', Helvetica, Arial, sans-serif;
+            color: #1a1a1a;
+            padding: 30px;
+            background: #ffffff;
+        }
+
+        .header {
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid #0f172a;
+        }
+
+        .brand {
+            margin-bottom: 15px;
+        }
+
+        .brand .logo {
+            width: 60px;
+            height: 60px;
+            border-radius: 10px;
+            background-color: #0f172a;
+            color: white;
+            text-align: center;
+            line-height: 60px;
+            font-weight: 700;
+            font-size: 24px;
+            margin-bottom: 12px;
+            display: inline-block;
+        }
+
+        h1 {
+            font-size: 24px;
+            color: #0f172a;
+            margin-bottom: 5px;
+            font-weight: 700;
+        }
+
+        .subtitle {
+            font-size: 13px;
+            color: #64748b;
+            font-weight: 500;
+        }
+
+        .meta {
+            font-size: 12px;
+            color: #475569;
+            margin-top: 12px;
+            padding: 10px;
+            background: #f8fafc;
+            border-radius: 6px;
+        }
+
+        .meta-line {
+            margin: 4px 0;
+        }
+
+        .meta-label {
+            font-weight: 600;
+            color: #334155;
+        }
+
+        .summary {
+            margin: 25px 0 30px 0;
+            page-break-inside: avoid;
+        }
+
+        .summary-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #0f172a;
+            margin-bottom: 12px;
+            background: #f1f5f9;
+            padding: 8px 12px;
+            border-radius: 6px;
+            border-left: 4px solid #3b82f6;
+        }
+
+        .cards-container {
+            display: table;
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 12px 0;
+        }
+
+        .summary .card {
+            display: table-cell;
+            padding: 16px 20px;
+            border-radius: 8px;
+            border: 2px solid;
+            width: 25%;
+            vertical-align: top;
+        }
+
+        .card.total {
+            background: #eff6ff;
+            border-color: #3b82f6;
+        }
+
+        .card.success {
+            background: #f0fdf4;
+            border-color: #22c55e;
+        }
+
+        .card.failed {
+            background: #fef2f2;
+            border-color: #ef4444;
+        }
+
+        .card.rate {
+            background: #fef3c7;
+            border-color: #f59e0b;
+        }
+
+        .summary .card .num {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+
+        .card.total .num { color: #1d4ed8; }
+        .card.success .num { color: #15803d; }
+        .card.failed .num { color: #dc2626; }
+        .card.rate .num { color: #d97706; }
+
+        .summary .card .label {
+            font-size: 13px;
+            color: #475569;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .errors-section {
+            margin-top: 30px;
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #0f172a;
+            margin-bottom: 15px;
+            padding: 10px 12px;
+            background: #fef2f2;
+            border-radius: 6px;
+            border-left: 4px solid #ef4444;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+            margin-top: 5px;
+        }
+
+        thead th {
+            text-align: left;
+            padding: 14px 12px;
+            background-color: #cfe2ff; /* couleur claire du header */
+            color: #0f172a; /* texte sombre pour contraste */
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border: none;
+        }
+
+        tbody td {
+            padding: 12px 10px;
+            border-bottom: 1px solid #e2e8f0;
+            vertical-align: top;
+        }
+
+        tbody tr:nth-child(odd) { background: #ffffff; }
+        tbody tr:nth-child(even) { background: #f8fafc; }
+        tbody tr:last-child td { border-bottom: 2px solid #cbd5e1; }
+
+        .badge {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        .badge.error {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fca5a5;
+        }
+
+        .badge.warn {
+            background: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .badge.ok {
+            background: #d1fae5;
+            color: #065f46;
+            border: 1px solid #6ee7b7;
+        }
+
+        .line-number {
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            color: #475569;
+            font-weight: 700;
+            background: #f1f5f9;
+            padding: 4px 10px;
+            border-radius: 4px;
+            display: inline-block;
+        }
+
+        .message {
+            color: #1e293b;
+            line-height: 1.6;
+            font-size: 12px;
+        }
+
+        .footer {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 2px solid #e2e8f0;
+            font-size: 11px;
+            color: #64748b;
+            text-align: center;
+        }
+
+        .footer-line {
+            margin: 3px 0;
+        }
+
+        @media print {
+            body { padding: 20px; }
+            .header, .summary, .errors-section { page-break-inside: avoid; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <div class="brand">
+        <h1>Rapport d'Erreurs d'Importation SCPI</h1>
+        <div class="subtitle">Fait par SCPI Importer</div>
+    </div>
+
+    <div class="meta">
+        <div class="meta-line">
+            <span class="meta-label">Date de génération :</span>
+            <span th:text="${reportDate}">2025-10-30T21:23:25</span>
+        </div>
+        <div class="meta-line">
+            <span class="meta-label">Lignes traitées :</span>
+            <span th:text="${totalLines}">52</span>
+        </div>
+    </div>
+</div>
+
+<div class="summary">
+    <div class="summary-title">RESUME DU TRAITEMENT</div>
+    <div class="cards-container">
+        <div class="card total">
+            <div class="num" th:text="${totalLines}">52</div>
+            <div class="label">Total lignes</div>
+        </div>
+        <div class="card success">
+            <div class="num" th:text="${successCount}">48</div>
+            <div class="label">Reussies</div>
+        </div>
+        <div class="card failed">
+            <div class="num" th:text="${failedCount}">4</div>
+            <div class="label">Echouées</div>
+        </div>
+        <div class="card rate" th:if="${failureRate != null}">
+            <div class="num" th:text="${failureRate} + '%'">7.7%</div>
+            <div class="label">Taux d'échec</div>
+        </div>
+    </div>
+</div>
+
+<div class="errors-section">
+    <div class="section-title">DETAILS DES ERREURS</div>
+
+    <table>
+        <thead>
+        <tr>
+            <th style="width: 180px;">Type d'érreur</th>
+            <th style="width: 100px;">Numéro ligne</th>
+            <th>Message d'érreur</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="err : ${errors}">
+            <td>
+                <span th:class="${#strings.toLowerCase(err.type).contains('invalid')} ? 'badge error' : (${#strings.toLowerCase(err.type).contains('warn')} ? 'badge warn' : 'badge ok')"
+                      th:text="${err.type}">POURCENTAGE_INVALID</span>
+            </td>
+            <td>
+                <span class="line-number" th:text="${err.lineNumber}">0</span>
+            </td>
+            <td>
+                <div class="message" th:text="${err.message}">Message d'érreur détaille</div>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+
+<div class="footer">
+    <div class="footer-line">
+        <strong>Rapport genere le :</strong> <span th:text="${reportDate}">2025-10-30T21:23:25</span>
+    </div>
+    <div class="footer-line">
+        SCPI Importer - Systeme de traitement par lots
+    </div>
+</div>
+
+</body>
+</html>

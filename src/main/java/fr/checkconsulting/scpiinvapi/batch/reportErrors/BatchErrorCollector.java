@@ -1,4 +1,4 @@
-package fr.checkconsulting.scpiinvapi.batch.reporterrors;
+package fr.checkconsulting.scpiinvapi.batch.reportErrors;
 
 import fr.checkconsulting.scpiinvapi.dto.request.BatchError;
 import lombok.Getter;

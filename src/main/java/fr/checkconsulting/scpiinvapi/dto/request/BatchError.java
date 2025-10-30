@@ -11,4 +11,7 @@ public class BatchError {
     private int lineNumber;
     private String type;
     private String message;
+
+    public BatchError(String message) {
+    }
 }

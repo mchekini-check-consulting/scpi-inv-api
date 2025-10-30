@@ -5,6 +5,7 @@ import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.util.Arrays;
 
@@ -78,6 +79,24 @@ public class MinioService {
         } catch (Exception e) {
             throw new Exception("Fichier non trouvé: " + fileName, e);
         }
+    }
+
+    public void uploadFile(byte[] data, String bucketName, String fileName, String contentType) throws Exception {
+        String activeProfile = Arrays.stream(environment.getActiveProfiles())
+                .findFirst()
+                .orElse("int");
+
+        try (InputStream inputStream = new ByteArrayInputStream(data)) {
+            minioClient.putObject(
+                    PutObjectArgs.builder()
+                            .bucket(activeProfile + "-" + bucketName)
+                            .object(fileName)
+                            .stream(inputStream, data.length, -1)
+                            .contentType(contentType)
+                            .build()
+            );
+        }
+
     }
 
 }

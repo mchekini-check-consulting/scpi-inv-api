@@ -1,7 +1,7 @@
 package fr.checkconsulting.scpiinvapi.batch.validator;
 
 import fr.checkconsulting.scpiinvapi.batch.exception.MissingColumnException;
-import fr.checkconsulting.scpiinvapi.batch.reporterrors.BatchErrorCollector;
+import fr.checkconsulting.scpiinvapi.batch.reportErrors.BatchErrorCollector;
 import fr.checkconsulting.scpiinvapi.model.enums.ScpiField;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,8 +23,7 @@ public class CsvValidator {
 
         for (ScpiField field : ScpiField.values()) {
             if (field == ScpiField.DECOTE_DEMEMBREMENT) {
-                if ("Oui".equalsIgnoreCase(demembrementValue) &&
-                        (decoteDemembrementValue == null || decoteDemembrementValue.isBlank())) {
+                if ("Oui".equalsIgnoreCase(demembrementValue) && decoteDemembrementValue.isBlank()) {
                     log.info("Colonne decote_demembrement obligatoire quand demembrement = Oui");
                     throw new MissingColumnException(field.getColumnName());
                 }
@@ -33,7 +32,7 @@ public class CsvValidator {
 
             try {
                 String value = fieldSet.readString(field.getColumnName());
-                if (value == null || value.isBlank()) {
+                if (value.isBlank()) {
                     log.info("Colonne obligatoire vide ou manquante : {}", field.getColumnName());
                         errorCollector.addError(fieldSet.getValues().length, "COLONNE_MANQUANTE",
                                 "Colonne obligatoire vide ou manquante : " + field.getColumnName());
