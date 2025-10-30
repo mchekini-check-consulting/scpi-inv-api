@@ -1,5 +1,6 @@
 package fr.checkconsulting.scpiinvapi.batch.config;
 
+import fr.checkconsulting.scpiinvapi.batch.listener.BatchJobListener;
 import fr.checkconsulting.scpiinvapi.batch.processor.ScpiItemProcessor;
 
 import fr.checkconsulting.scpiinvapi.batch.reader.ScpiItemReader;
@@ -30,11 +31,13 @@ public class BatchConfig {
     private final ScpiItemReader scpiItemReader;
     private final ScpiItemProcessor processor;
     private final ScpiItemWriter writer;
+    private final BatchJobListener batchJobListener;
 
-    public BatchConfig(ScpiItemReader scpiItemReader, ScpiItemProcessor processor, ScpiItemWriter writer) {
+    public BatchConfig(ScpiItemReader scpiItemReader, ScpiItemProcessor processor, ScpiItemWriter writer,BatchJobListener batchJobListener) {
         this.scpiItemReader = scpiItemReader;
         this.processor = processor;
         this.writer = writer;
+        this.batchJobListener = batchJobListener;
     }
 
     @Bean
@@ -61,6 +64,7 @@ public class BatchConfig {
     public Job importScpiJob(JobRepository jobRepository, Step importScpiStep) {
         return new JobBuilder("importScpiJob", jobRepository)
                 .start(importScpiStep)
+                .listener(batchJobListener)
                 .build();
     }
 }

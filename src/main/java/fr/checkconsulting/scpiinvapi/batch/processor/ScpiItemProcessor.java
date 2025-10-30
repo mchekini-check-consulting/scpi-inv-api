@@ -1,8 +1,10 @@
 package fr.checkconsulting.scpiinvapi.batch.processor;
 
+import fr.checkconsulting.scpiinvapi.batch.reporterrors.BatchErrorCollector;
 import fr.checkconsulting.scpiinvapi.dto.request.ScpiDto;
 import fr.checkconsulting.scpiinvapi.model.entity.*;
 import io.micrometer.common.lang.NonNull;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.item.ItemProcessor;
 import org.springframework.stereotype.Component;
@@ -14,7 +16,13 @@ import java.util.List;
 
 @Component
 @Slf4j
+@RequiredArgsConstructor
 public class ScpiItemProcessor implements ItemProcessor<ScpiDto, Scpi> {
+
+    private static final BigDecimal LOWER_BOUND = new BigDecimal("99.95");
+    private static final BigDecimal UPPER_BOUND = new BigDecimal("100.05");
+
+    private final BatchErrorCollector errorCollector;
 
     @Override
     public Scpi process(@NonNull ScpiDto scpiDto) {
@@ -54,6 +62,9 @@ public class ScpiItemProcessor implements ItemProcessor<ScpiDto, Scpi> {
         setDismembermentDiscounts(scpiDto, scpi);
         setScpiPartValues(scpiDto, scpi);
 
+        if (!isValidPercentages(scpi)) {
+            return null;
+        }
         return scpi;
     }
 
@@ -75,7 +86,6 @@ public class ScpiItemProcessor implements ItemProcessor<ScpiDto, Scpi> {
                         .build();
 
                 sectors.add(sector);
-                log.info("Sector ajouté : {} avec {}%", name, percentage);
             }
         }
 
@@ -99,7 +109,6 @@ public class ScpiItemProcessor implements ItemProcessor<ScpiDto, Scpi> {
                         .build();
 
                 locations.add(location);
-                log.info("Location ajoutée : {} avec {}%", country, percentage);
             }
         }
 
@@ -187,5 +196,32 @@ public class ScpiItemProcessor implements ItemProcessor<ScpiDto, Scpi> {
         scpi.setScpiValues(values);
     }
 
+    private boolean isValidPercentages(Scpi scpi) {
+        BigDecimal sumLocations = scpi.getLocations().stream()
+                .map(Location::getPercentage)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        BigDecimal sumSectors = scpi.getSectors().stream()
+                .map(Sector::getPercentage)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        boolean validLocations = sumLocations.compareTo(LOWER_BOUND) >= 0
+                && sumLocations.compareTo(UPPER_BOUND) <= 0;
+
+        boolean validSectors = sumSectors.compareTo(LOWER_BOUND) >= 0
+                && sumSectors.compareTo(UPPER_BOUND) <= 0;
+
+        boolean valid = validLocations && validSectors;
+
+        if (!valid) {
+            log.info("SCPI '{}' ignorée : Localisations = {}%, Secteurs = {}%",
+                    scpi.getName(), sumLocations, sumSectors);
+            errorCollector.addError(0, "POURCENTAGE_INVALID",
+                    String.format("SCPI '%s' : Localisations=%s%% (------tolérance [99.95-100.05]---------), Secteurs=%s%% (------tolérance [99.95-100.05]---------)",
+                            scpi.getName(), sumLocations, sumSectors));
+        }
+
+        return valid;
+    }
 }
 

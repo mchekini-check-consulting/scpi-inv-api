@@ -12,9 +12,15 @@ import java.nio.charset.StandardCharsets;
 
 @Component
 public class ScpiItemReader {
+    private final ScpiRequestFieldSetMapper fieldSetMapper;
+
+    public ScpiItemReader(ScpiRequestFieldSetMapper fieldSetMapper) {
+        this.fieldSetMapper = fieldSetMapper;
+    }
 
     @Bean
     public FlatFileItemReader<ScpiDto> reader() {
+
         return new FlatFileItemReaderBuilder<ScpiDto>()
                 .name("scpiRequestItemReader")
                 .resource(new ClassPathResource("data/scpi.csv"))
@@ -44,7 +50,7 @@ public class ScpiItemReader {
                         ScpiField.VERSEMENT_PROGRAMME.getColumnName(),
                         ScpiField.PUBLICITE.getColumnName()
                 )
-                .fieldSetMapper(new ScpiRequestFieldSetMapper())
+                .fieldSetMapper(fieldSetMapper)
                 .build();
     }
 
