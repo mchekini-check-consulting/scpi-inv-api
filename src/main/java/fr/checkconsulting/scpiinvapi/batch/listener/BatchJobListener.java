@@ -1,10 +1,9 @@
 package fr.checkconsulting.scpiinvapi.batch.listener;
 
-import fr.checkconsulting.scpiinvapi.batch.reportErrors.BatchErrorCollector;
-import fr.checkconsulting.scpiinvapi.batch.reportErrors.GenerateErrorReport;
+import fr.checkconsulting.scpiinvapi.batch.report.BatchErrorCollector;
+import fr.checkconsulting.scpiinvapi.batch.report.GenerateErrorReport;
 import fr.checkconsulting.scpiinvapi.dto.request.BatchError;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.JobExecution;
 import org.springframework.batch.core.JobExecutionListener;
@@ -14,7 +13,6 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 
 @Component
-@RequiredArgsConstructor
 @Slf4j
 public class BatchJobListener implements JobExecutionListener {
 
@@ -26,6 +24,11 @@ public class BatchJobListener implements JobExecutionListener {
 
     @Getter
     private List<BatchError> errors;
+
+    public BatchJobListener(GenerateErrorReport reportService, BatchErrorCollector errorCollector) {
+        this.reportService = reportService;
+        this.errorCollector = errorCollector;
+    }
 
     @Override
     public void beforeJob(JobExecution jobExecution) {

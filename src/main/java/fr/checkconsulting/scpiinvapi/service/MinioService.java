@@ -1,22 +1,25 @@
 package fr.checkconsulting.scpiinvapi.service;
 
 import io.minio.*;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
-import java.util.Arrays;
 
 @Service
 public class MinioService {
 
+
+    @Value("${spring.profiles.active}")
+    String activeProfile;
+
     private final MinioClient minioClient;
     private final Environment environment;
 
-    public MinioService(MinioClient minioClient,Environment environment)
-    {
+    public MinioService(MinioClient minioClient, Environment environment) {
         this.minioClient = minioClient;
         this.environment = environment;
 
@@ -24,9 +27,6 @@ public class MinioService {
 
     public String uploadFile(MultipartFile file, String bucketName) throws Exception {
 
-        String activeProfile = Arrays.stream(environment.getActiveProfiles())
-                .findFirst()
-                .orElse("int");
 
         String fileName = file.getOriginalFilename();
 
@@ -82,9 +82,7 @@ public class MinioService {
     }
 
     public void uploadFile(byte[] data, String bucketName, String fileName, String contentType) throws Exception {
-        String activeProfile = Arrays.stream(environment.getActiveProfiles())
-                .findFirst()
-                .orElse("int");
+       
 
         try (InputStream inputStream = new ByteArrayInputStream(data)) {
             minioClient.putObject(

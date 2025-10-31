@@ -1,64 +1,74 @@
 package fr.checkconsulting.scpiinvapi.batch.validator;
 
 import fr.checkconsulting.scpiinvapi.batch.exception.MissingColumnException;
-import fr.checkconsulting.scpiinvapi.batch.reportErrors.BatchErrorCollector;
+import fr.checkconsulting.scpiinvapi.batch.report.BatchErrorCollector;
 import fr.checkconsulting.scpiinvapi.model.enums.ScpiField;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.item.file.transform.FieldSet;
 import org.springframework.stereotype.Component;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
-@Slf4j
-@RequiredArgsConstructor
 @Component
 public class CsvValidator {
+
     private final BatchErrorCollector errorCollector;
 
-    public  boolean validate(FieldSet fieldSet) {
+    public CsvValidator(BatchErrorCollector errorCollector) {
+        this.errorCollector = errorCollector;
+    }
+
+    public boolean validate(FieldSet fieldSet) {
         String demembrementValue = fieldSet.readString(ScpiField.DEMEMBREMENT.getColumnName());
         String decoteDemembrementValue = fieldSet.readString(ScpiField.DECOTE_DEMEMBREMENT.getColumnName());
 
         for (ScpiField field : ScpiField.values()) {
-            if (field == ScpiField.DECOTE_DEMEMBREMENT) {
-                if ("Oui".equalsIgnoreCase(demembrementValue) && decoteDemembrementValue.isBlank()) {
-                    log.info("Colonne decote_demembrement obligatoire quand demembrement = Oui");
-                    throw new MissingColumnException(field.getColumnName());
-                }
-                continue;
-            }
-
             try {
                 String value = fieldSet.readString(field.getColumnName());
-                if (value.isBlank()) {
-                    log.info("Colonne obligatoire vide ou manquante : {}", field.getColumnName());
-                        errorCollector.addError(fieldSet.getValues().length, "COLONNE_MANQUANTE",
-                                "Colonne obligatoire vide ou manquante : " + field.getColumnName());
-                    throw new MissingColumnException(field.getColumnName());
+
+                if (field == ScpiField.DECOTE_DEMEMBREMENT) {
+                    if ("Oui".equalsIgnoreCase(demembrementValue) && decoteDemembrementValue.isBlank()) {
+                        throwMissingColumn(field.getColumnName(), fieldSet.getValues().length);
+                    }
+                    continue;
                 }
+
+                if (value.isBlank()) {
+                    throwMissingColumn(field.getColumnName(), fieldSet.getValues().length);
+                }
+
             } catch (IllegalArgumentException e) {
-                log.info("Colonne obligatoire manquante dans le CSV : {}", field.getColumnName());
-                throw new MissingColumnException(field.getColumnName());
+                throwMissingColumn(field.getColumnName(), fieldSet.getValues().length);
             }
         }
 
+        checkExtraColumns(fieldSet);
+        return true;
+    }
+
+
+    private void checkExtraColumns(FieldSet fieldSet) {
         List<String> extraColumns = Arrays.stream(fieldSet.getNames())
                 .filter(name -> Arrays.stream(ScpiField.values())
                         .noneMatch(f -> f.getColumnName().equals(name)))
                 .toList();
 
-        if (!extraColumns.isEmpty()) {
-            extraColumns.forEach(col -> {
-                log.info("Colonne supplémentaire ignorée : {}", col);
-                errorCollector.addError(0, "COLONNE_SUPPLEMENTAIRE",
-                        "Colonne supplémentaire ignorée : " + col);
-            });
-        }
-
-        return true;
+        extraColumns.forEach(col ->
+                addColumnError(0, "COLONNE_SUPPLÉMENTAIRE", "Colonne supplémentaire ignorée : " + col));
     }
 
+    private void throwMissingColumn(String columnName, int lineNumber) {
+        addColumnError(lineNumber, "COLONNE_MANQUANTE", "Colonne obligatoire vide ou manquante : " + columnName);
+        throw new MissingColumnException(columnName);
+    }
 
+    private void addColumnError(int lineNumber, String code, String message) {
+        errorCollector.addError(lineNumber, code, message);
+    }
 }
