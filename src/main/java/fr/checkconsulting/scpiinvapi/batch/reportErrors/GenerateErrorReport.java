@@ -28,11 +28,8 @@ public class GenerateErrorReport {
     }
 
     public void generateAndUploadErrorReport(List<BatchError> errors, long totalLinesProcessed) {
-        log.info("=== Starting PDF error report generation ===");
-        log.info("Total lines processed: {}", totalLinesProcessed);
 
         if (errors == null || errors.isEmpty()) {
-            log.info("No errors found. Skipping PDF generation.");
             return;
         }
 
@@ -68,12 +65,10 @@ public class GenerateErrorReport {
 
             minioService.uploadFile(pdfBytes, "data", fileName, "application/pdf");
 
-            log.info("PDF error report uploaded successfully to MinIO bucket 'data' as '{}'", fileName);
-
         } catch (Exception e) {
             log.error("Unexpected error during PDF report generation and upload", e);
         } finally {
-            log.info("=== PDF error report generation finished ===");
+            log.info("PDF error report generation finished");
         }
     }
 

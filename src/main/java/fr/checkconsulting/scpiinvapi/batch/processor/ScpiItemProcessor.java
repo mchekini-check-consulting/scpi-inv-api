@@ -157,7 +157,6 @@ public class ScpiItemProcessor implements ItemProcessor<ScpiDto, Scpi> {
         boolean valid = validLocations && validSectors;
 
         if (!valid) {
-            log.info("SCPI '{}' ignorée : Localisations = {}%, Secteurs = {}%", scpi.getName(), sumLocations, sumSectors);
             errorCollector.addError(
                     lineNum,
                     "POURCENTAGE_INVALID",

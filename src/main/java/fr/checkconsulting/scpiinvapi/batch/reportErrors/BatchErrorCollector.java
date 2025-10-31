@@ -13,6 +13,7 @@ public class BatchErrorCollector {
     private final List<BatchError> errors = new ArrayList<>();
 
     public void addError(int line, String type, String message) {
+
         errors.add(new BatchError(line, type, message));
     }
 

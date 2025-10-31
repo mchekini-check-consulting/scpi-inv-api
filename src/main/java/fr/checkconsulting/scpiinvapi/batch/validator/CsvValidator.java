@@ -24,7 +24,6 @@ public class CsvValidator {
         for (ScpiField field : ScpiField.values()) {
             if (field == ScpiField.DECOTE_DEMEMBREMENT) {
                 if ("Oui".equalsIgnoreCase(demembrementValue) && decoteDemembrementValue.isBlank()) {
-                    log.info("Colonne decote_demembrement obligatoire quand demembrement = Oui");
                     throw new MissingColumnException(field.getColumnName());
                 }
                 continue;
@@ -33,13 +32,11 @@ public class CsvValidator {
             try {
                 String value = fieldSet.readString(field.getColumnName());
                 if (value.isBlank()) {
-                    log.info("Colonne obligatoire vide ou manquante : {}", field.getColumnName());
                         errorCollector.addError(fieldSet.getValues().length, "COLONNE_MANQUANTE",
                                 "Colonne obligatoire vide ou manquante : " + field.getColumnName());
                     throw new MissingColumnException(field.getColumnName());
                 }
             } catch (IllegalArgumentException e) {
-                log.info("Colonne obligatoire manquante dans le CSV : {}", field.getColumnName());
                 throw new MissingColumnException(field.getColumnName());
             }
         }
@@ -51,7 +48,6 @@ public class CsvValidator {
 
         if (!extraColumns.isEmpty()) {
             extraColumns.forEach(col -> {
-                log.info("Colonne supplémentaire ignorée : {}", col);
                 errorCollector.addError(0, "COLONNE_SUPPLEMENTAIRE",
                         "Colonne supplémentaire ignorée : " + col);
             });
@@ -59,6 +55,5 @@ public class CsvValidator {
 
         return true;
     }
-
 
 }

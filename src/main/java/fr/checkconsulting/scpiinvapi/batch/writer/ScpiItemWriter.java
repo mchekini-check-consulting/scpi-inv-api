@@ -39,16 +39,13 @@ public class ScpiItemWriter implements ItemWriter<Scpi> {
                     scpiMapper.updateScpi(existing, scpi);
                     scpiRepository.save(existing);
                     updatedCount++;
-                    log.debug("SCPI mise à jour : {}", existing.getName());
                 } else {
                     scpiRepository.save(scpi);
                     createdCount++;
-                    log.debug("Nouvelle SCPI enregistrée : {}", scpi.getName());
                 }
             }
             catch (Exception e) {
                 errorCount++;
-                log.error("Erreur lors du traitement de la SCPI: {}", scpi.getName(), e);
             }
         }
     }

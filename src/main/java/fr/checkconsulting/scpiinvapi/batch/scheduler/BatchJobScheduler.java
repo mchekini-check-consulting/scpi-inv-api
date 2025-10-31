@@ -29,7 +29,6 @@ public class BatchJobScheduler {
             jobLauncher.run(scpiJob, new JobParametersBuilder()
                     .addLong("time", System.currentTimeMillis())
                     .toJobParameters());
-            log.info("Job SCPI exécuté à {}", LocalDateTime.now());
         } catch (Exception e) {
             log.error("Erreur lors de l'exécution du job SCPI", e);
         }

@@ -17,6 +17,7 @@ import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -38,7 +39,6 @@ public class ScpiItemReader {
         this.minioService = minioService;
         this.environment = environment;
     }
-
     @Bean
     public FlatFileItemReader<ScpiDto> reader() throws Exception {
         List<String> expectedColumns = List.of(
@@ -64,15 +64,24 @@ public class ScpiItemReader {
                 ScpiField.PUBLICITE.getColumnName()
         );
 
-
         String activeProfile = Arrays.stream(environment.getActiveProfiles())
                 .findFirst()
-                .orElse("int");
-        String bucketName = activeProfile.equals("int") ? "int-data" : "qua-data";
-        byte[] csvBytes = minioService.downloadFileAsBytes("scpi.csv", bucketName);
-        validateCsvHeaders(new ByteArrayInputStream(csvBytes), expectedColumns);
+                .orElse("local");
 
-        InputStreamResource resource = new InputStreamResource(new ByteArrayInputStream(csvBytes));
+        InputStreamResource resource;
+
+        if (activeProfile.equalsIgnoreCase("local")) {
+            resource = new InputStreamResource(
+                    Objects.requireNonNull(getClass().getClassLoader()
+                            .getResourceAsStream("data/scpi.csv"))
+            );
+        } else {
+            String bucketName = activeProfile.equals("int") ? "int-data" : "qua-data";
+
+            byte[] csvBytes = minioService.downloadFileAsBytes("scpi.csv", bucketName);
+            validateCsvHeaders(new ByteArrayInputStream(csvBytes), expectedColumns);
+            resource = new InputStreamResource(new ByteArrayInputStream(csvBytes));
+        }
 
         return new FlatFileItemReaderBuilder<ScpiDto>()
                 .name("scpiRequestItemReader")
@@ -116,7 +125,7 @@ public class ScpiItemReader {
             if (!extra.isEmpty()) {
                 extra.forEach(col -> errorCollector.addError(1, "COLONNE_SUPPLÉMENTAIRE",
                         "Colonne supplémentaire ignorée : " + col));
-                log.warn("Colonnes supplémentaires détectées (ignorées) : {}", extra);
+                log.info("Colonnes supplémentaires détectées (ignorées) : {}", extra);
             }
 
             log.info("Vérification des colonnes CSV réussie : toutes les colonnes attendues sont présentes.");
