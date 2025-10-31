@@ -1,5 +1,7 @@
 package fr.checkconsulting.scpiinvapi.mapper;
 
+import fr.checkconsulting.scpiinvapi.dto.response.ScpiDismembrementDto;
+import fr.checkconsulting.scpiinvapi.dto.response.ScpiInvestmentDto;
 import fr.checkconsulting.scpiinvapi.dto.response.ScpiSummaryDto;
 import fr.checkconsulting.scpiinvapi.model.entity.*;
 import org.mapstruct.*;
@@ -27,6 +29,48 @@ public interface ScpiMapper {
 
     List<ScpiSummaryDto> toScpiSummaryDto(List<Scpi> source);
 
+    @Mapping(target = "sharePrice", source = "source", qualifiedByName = "extractLatestSharePrice")
+    @Mapping(target = "distributionRate", source = "source", qualifiedByName = "extractRate")
+    @Mapping(target = "dismembermentActive", source = "dismemberment")
+    @Mapping(target = "scpiDismembrement", source = "source", qualifiedByName = "extractDismembermentBareme")
+    ScpiInvestmentDto toScpiInvestmentDto(Scpi source);
+
+    @Named("extractLatestSharePrice")
+    default BigDecimal extractLatestSharePrice(Scpi scpi) {
+        if (scpi.getScpiValues() == null || scpi.getScpiValues().isEmpty()) {
+            return null;
+        }
+
+        return scpi.getScpiValues().stream()
+                .max(java.util.Comparator.comparing(ScpiPartValues::getYear))
+                .map(ScpiPartValues::getSharePrice)
+                .orElse(null);
+    }
+
+    @Named("extractDismembermentBareme")
+    default List<ScpiDismembrementDto> extractDismembermentBareme(Scpi scpi) {
+        if (scpi.getDismemberment() == null ||
+                !scpi.getDismemberment() ||
+                scpi.getDismembermentDiscounts() == null ||
+                scpi.getDismembermentDiscounts().isEmpty()) {
+            return List.of();
+        }
+
+        return scpi.getDismembermentDiscounts().stream()
+                .sorted(java.util.Comparator.comparing(DismembermentDiscounts::getDurationYears))
+                .map(discount -> {
+                    BigDecimal nuePropriete = discount.getPercentage();
+                    BigDecimal usufruit = BigDecimal.valueOf(100).subtract(nuePropriete);
+
+                    return ScpiDismembrementDto.builder()
+                            .durationYears(discount.getDurationYears())
+                            .nueProprietePercentage(nuePropriete)
+                            .usufruitPercentage(usufruit)
+                            .build();
+                })
+                .collect(java.util.stream.Collectors.toList());
+    }
+
     @Named("extractRate")
     default BigDecimal extractLastDistributionRate(Scpi scpi) {
 
@@ -38,7 +82,6 @@ public interface ScpiMapper {
     @Named("extractCountry")
     default String extractMainCountry(Scpi scpi) {
 
-
         return scpi.getLocations().stream()
                 .filter(location -> location.getPercentage() != null)
                 .max(java.util.Comparator.comparing(Location::getPercentage))
@@ -48,8 +91,10 @@ public interface ScpiMapper {
 
     @AfterMapping
     default void mergeDistributionRates(@MappingTarget Scpi target, Scpi source) {
-        if (source.getDistributionRates() == null) return;
-        if (target.getDistributionRates() == null) target.setDistributionRates(new ArrayList<>());
+        if (source.getDistributionRates() == null)
+            return;
+        if (target.getDistributionRates() == null)
+            target.setDistributionRates(new ArrayList<>());
 
         for (DistributionRate src : source.getDistributionRates()) {
             DistributionRate existing = target.getDistributionRates().stream()
@@ -66,11 +111,12 @@ public interface ScpiMapper {
         }
     }
 
-
     @AfterMapping
     default void mergeDismembermentDiscounts(@MappingTarget Scpi target, Scpi source) {
-        if (source.getDismembermentDiscounts() == null) return;
-        if (target.getDismembermentDiscounts() == null) target.setDismembermentDiscounts(new ArrayList<>());
+        if (source.getDismembermentDiscounts() == null)
+            return;
+        if (target.getDismembermentDiscounts() == null)
+            target.setDismembermentDiscounts(new ArrayList<>());
 
         for (DismembermentDiscounts src : source.getDismembermentDiscounts()) {
             DismembermentDiscounts existing = target.getDismembermentDiscounts().stream()
@@ -89,8 +135,10 @@ public interface ScpiMapper {
 
     @AfterMapping
     default void mergeLocations(@MappingTarget Scpi target, Scpi source) {
-        if (source.getLocations() == null) return;
-        if (target.getLocations() == null) target.setLocations(new ArrayList<>());
+        if (source.getLocations() == null)
+            return;
+        if (target.getLocations() == null)
+            target.setLocations(new ArrayList<>());
 
         for (Location src : source.getLocations()) {
             Location existing = target.getLocations().stream()
@@ -109,8 +157,10 @@ public interface ScpiMapper {
 
     @AfterMapping
     default void mergeSectors(@MappingTarget Scpi target, Scpi source) {
-        if (source.getSectors() == null) return;
-        if (target.getSectors() == null) target.setSectors(new ArrayList<>());
+        if (source.getSectors() == null)
+            return;
+        if (target.getSectors() == null)
+            target.setSectors(new ArrayList<>());
 
         for (Sector src : source.getSectors()) {
             Sector existing = target.getSectors().stream()
@@ -129,8 +179,10 @@ public interface ScpiMapper {
 
     @AfterMapping
     default void mergeScpiPartValues(@MappingTarget Scpi target, Scpi source) {
-        if (source.getScpiValues() == null) return;
-        if (target.getScpiValues() == null) target.setScpiValues(new ArrayList<>());
+        if (source.getScpiValues() == null)
+            return;
+        if (target.getScpiValues() == null)
+            target.setScpiValues(new ArrayList<>());
 
         for (ScpiPartValues src : source.getScpiValues()) {
             ScpiPartValues existing = target.getScpiValues().stream()
