@@ -35,6 +35,7 @@ public class Scpi {
     private String imageUrl;
     private String manager;
 
+
     @OneToMany(mappedBy = "scpi", cascade = CascadeType.ALL)
     private List<Location> locations;
 
