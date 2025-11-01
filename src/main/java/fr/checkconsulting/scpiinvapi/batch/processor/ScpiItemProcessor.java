@@ -1,6 +1,6 @@
 package fr.checkconsulting.scpiinvapi.batch.processor;
 
-import fr.checkconsulting.scpiinvapi.batch.reportErrors.BatchErrorCollector;
+import fr.checkconsulting.scpiinvapi.batch.report.BatchErrorCollector;
 import fr.checkconsulting.scpiinvapi.dto.request.ScpiDto;
 import fr.checkconsulting.scpiinvapi.model.entity.*;
 import io.micrometer.common.lang.NonNull;
@@ -157,7 +157,6 @@ public class ScpiItemProcessor implements ItemProcessor<ScpiDto, Scpi> {
         boolean valid = validLocations && validSectors;
 
         if (!valid) {
-            log.info("SCPI '{}' ignorée : Localisations = {}%, Secteurs = {}%", scpi.getName(), sumLocations, sumSectors);
             errorCollector.addError(
                     lineNum,
                     "POURCENTAGE_INVALID",

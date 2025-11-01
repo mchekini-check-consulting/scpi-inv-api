@@ -1,4 +1,4 @@
-package fr.checkconsulting.scpiinvapi.batch.reportErrors;
+package fr.checkconsulting.scpiinvapi.batch.report;
 
 import fr.checkconsulting.scpiinvapi.dto.request.BatchError;
 import lombok.Getter;
@@ -13,6 +13,7 @@ public class BatchErrorCollector {
     private final List<BatchError> errors = new ArrayList<>();
 
     public void addError(int line, String type, String message) {
+
         errors.add(new BatchError(line, type, message));
     }
 

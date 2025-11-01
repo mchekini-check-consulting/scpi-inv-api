@@ -26,9 +26,6 @@ public class ScpiItemWriter implements ItemWriter<Scpi> {
 
         if (items.isEmpty()) return;
 
-        int createdCount = 0;
-        int updatedCount = 0;
-        int errorCount = 0;
 
         for (Scpi scpi : items) {
             try {
@@ -38,17 +35,12 @@ public class ScpiItemWriter implements ItemWriter<Scpi> {
                     Scpi existing = existingOpt.get();
                     scpiMapper.updateScpi(existing, scpi);
                     scpiRepository.save(existing);
-                    updatedCount++;
-                    log.debug("SCPI mise à jour : {}", existing.getName());
                 } else {
                     scpiRepository.save(scpi);
-                    createdCount++;
-                    log.debug("Nouvelle SCPI enregistrée : {}", scpi.getName());
                 }
             }
             catch (Exception e) {
-                errorCount++;
-                log.error("Erreur lors du traitement de la SCPI: {}", scpi.getName(), e);
+                log.debug("Error while saving scpi {}", scpi.getName(), e);
             }
         }
     }
