@@ -21,7 +21,6 @@ public class ScpiService {
 
     public List<ScpiSummaryDto> getAllScpi() {
 
-
         return scpiMapper.toScpiSummaryDto(scpiRepository.findAll());
 
 

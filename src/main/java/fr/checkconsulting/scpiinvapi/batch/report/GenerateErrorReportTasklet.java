@@ -1,4 +1,4 @@
-package fr.checkconsulting.scpiinvapi.batch.reportErrors;
+package fr.checkconsulting.scpiinvapi.batch.report;
 
 import fr.checkconsulting.scpiinvapi.dto.request.BatchError;
 import org.springframework.batch.core.StepContribution;
