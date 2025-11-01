@@ -30,7 +30,7 @@ public class MinioService {
         try (InputStream inputStream = file.getInputStream()) {
             minioClient.putObject(
                     PutObjectArgs.builder()
-                            .bucket(activeProfile + "-" + bucketName)
+                            .bucket(bucketName)
                             .object(fileName)
                             .stream(inputStream, file.getSize(), -1)
                             .contentType(file.getContentType())
@@ -84,7 +84,7 @@ public class MinioService {
         try (InputStream inputStream = new ByteArrayInputStream(data)) {
             minioClient.putObject(
                     PutObjectArgs.builder()
-                            .bucket(activeProfile + "-" + bucketName)
+                            .bucket(bucketName)
                             .object(fileName)
                             .stream(inputStream, data.length, -1)
                             .contentType(contentType)

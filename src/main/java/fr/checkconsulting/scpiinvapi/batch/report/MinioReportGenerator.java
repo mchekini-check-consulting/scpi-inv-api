@@ -4,6 +4,7 @@ import com.openhtmltopdf.pdfboxout.PdfRendererBuilder;
 import fr.checkconsulting.scpiinvapi.dto.request.BatchError;
 import fr.checkconsulting.scpiinvapi.service.MinioService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 import org.thymeleaf.context.Context;
@@ -20,6 +21,9 @@ import java.util.Locale;
 @Profile({"int", "qua"})
 @Slf4j
 public class MinioReportGenerator implements ReportGenerator {
+
+    @Value("${spring.profiles.active}")
+    private String env;
 
     private final SpringTemplateEngine templateEngine;
     private final MinioService minioService;
@@ -61,7 +65,8 @@ public class MinioReportGenerator implements ReportGenerator {
             String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss"));
             String fileName = "scpi_error_report_" + timestamp + ".pdf";
 
-            String bucketName = Thread.currentThread().getName().toLowerCase().contains("int") ? "int-data" : "qua-data";
+            String bucketName = env + "-data";
+            log.info("uploading file {} to bucket {}", fileName, bucketName);
             minioService.uploadFile(pdfBytes, bucketName, fileName, "application/pdf");
 
         } catch (Exception e) {

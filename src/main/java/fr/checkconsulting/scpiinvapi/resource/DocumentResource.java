@@ -4,6 +4,7 @@ import fr.checkconsulting.scpiinvapi.dto.response.FileBase64Dto;
 import fr.checkconsulting.scpiinvapi.model.enums.DocumentType;
 import fr.checkconsulting.scpiinvapi.service.MinioService;
 import io.minio.StatObjectResponse;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -16,6 +17,9 @@ import java.util.Map;
 @RestController
 @RequestMapping("api/v1/document")
 public class DocumentResource {
+
+    @Value("${spring.profiles.active}")
+    String activeProfile;
 
     private final MinioService minioService;
 
@@ -34,7 +38,7 @@ public class DocumentResource {
                 return ResponseEntity.badRequest().body(response);
             }
 
-            String fileName = minioService.uploadFile(file, type.getDocumentType());
+            String fileName = minioService.uploadFile(file, activeProfile + "-" + type.getDocumentType());
 
             response.put("message", "Fichier uploadé avec succès");
             response.put("fileName", fileName);
