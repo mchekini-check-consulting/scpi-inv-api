@@ -1,5 +1,6 @@
 package fr.checkconsulting.scpiinvapi.mapper;
 
+import fr.checkconsulting.scpiinvapi.dto.response.ScpiDetailDto;
 import fr.checkconsulting.scpiinvapi.dto.response.ScpiDismembrementDto;
 import fr.checkconsulting.scpiinvapi.dto.response.ScpiInvestmentDto;
 import fr.checkconsulting.scpiinvapi.dto.response.ScpiSummaryDto;
@@ -87,5 +88,7 @@ public interface ScpiMapper {
                 .map(Location::getCountry)
                 .orElse(null);
     }
+
+    ScpiDetailDto toScpiDetailDto(Scpi scpi);
 
 }
