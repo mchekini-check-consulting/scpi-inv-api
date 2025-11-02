@@ -1,6 +1,7 @@
 package fr.checkconsulting.scpiinvapi.resource;
 
 import fr.checkconsulting.scpiinvapi.dto.response.ScpiInvestmentDto;
+import fr.checkconsulting.scpiinvapi.dto.response.ScpiRepartitionDto;
 import fr.checkconsulting.scpiinvapi.dto.response.ScpiSummaryDto;
 import fr.checkconsulting.scpiinvapi.service.ScpiService;
 import lombok.RequiredArgsConstructor;
@@ -18,9 +19,9 @@ import java.util.List;
 @RequiredArgsConstructor
 @Slf4j
 public class ScpiResource {
-    
+
     private final ScpiService scpiService;
-    
+
     @GetMapping
     public ResponseEntity<List<ScpiSummaryDto>> getAllScpi() {
 
@@ -32,5 +33,12 @@ public class ScpiResource {
     public ResponseEntity<ScpiInvestmentDto> getScpiById(@PathVariable Long id) {
         ScpiInvestmentDto scpiDetails = scpiService.getScpiInvestmentById(id);
         return ResponseEntity.ok(scpiDetails);
+    }
+
+    @GetMapping("/{id}/repartition")
+    public ResponseEntity<ScpiRepartitionDto> getScpiRepartition(@PathVariable Long id) {
+
+        ScpiRepartitionDto repartition = scpiService.getScpiRepartitionById(id);
+        return ResponseEntity.ok(repartition);
     }
 }
