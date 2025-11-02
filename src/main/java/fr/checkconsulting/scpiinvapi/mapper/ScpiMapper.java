@@ -1,7 +1,9 @@
 package fr.checkconsulting.scpiinvapi.mapper;
 
+import fr.checkconsulting.scpiinvapi.dto.response.RepartitionItemDto;
 import fr.checkconsulting.scpiinvapi.dto.response.ScpiDismembrementDto;
 import fr.checkconsulting.scpiinvapi.dto.response.ScpiInvestmentDto;
+import fr.checkconsulting.scpiinvapi.dto.response.ScpiRepartitionDto;
 import fr.checkconsulting.scpiinvapi.dto.response.ScpiSummaryDto;
 import fr.checkconsulting.scpiinvapi.model.entity.*;
 import org.mapstruct.*;
@@ -34,6 +36,10 @@ public interface ScpiMapper {
     @Mapping(target = "dismembermentActive", source = "dismemberment")
     @Mapping(target = "scpiDismembrement", source = "source", qualifiedByName = "extractDismembermentBareme")
     ScpiInvestmentDto toScpiInvestmentDto(Scpi source);
+
+    @Mapping(target = "geographical", source = "locations", qualifiedByName = "mapLocationsToRepartition")
+    @Mapping(target = "sectoral", source = "sectors", qualifiedByName = "mapSectorsToRepartition")
+    ScpiRepartitionDto toScpiRepartitionDto(Scpi source);
 
     @Named("extractLatestSharePrice")
     default BigDecimal extractLatestSharePrice(Scpi scpi) {
@@ -87,6 +93,34 @@ public interface ScpiMapper {
                 .max(java.util.Comparator.comparing(Location::getPercentage))
                 .map(Location::getCountry)
                 .orElse(null);
+    }
+
+    @Named("mapLocationsToRepartition")
+    default List<RepartitionItemDto> mapLocationsToRepartition(List<Location> locations) {
+        if (locations == null || locations.isEmpty()) {
+            return List.of();
+        }
+
+        return locations.stream()
+                .map(location -> RepartitionItemDto.builder()
+                        .label(location.getCountry())
+                        .percentage(location.getPercentage())
+                        .build())
+                .collect(java.util.stream.Collectors.toList());
+    }
+
+    @Named("mapSectorsToRepartition")
+    default List<RepartitionItemDto> mapSectorsToRepartition(List<Sector> sectors) {
+        if (sectors == null || sectors.isEmpty()) {
+            return List.of();
+        }
+
+        return sectors.stream()
+                .map(sector -> RepartitionItemDto.builder()
+                        .label(sector.getName())
+                        .percentage(sector.getPercentage())
+                        .build())
+                .collect(java.util.stream.Collectors.toList());
     }
 
     @AfterMapping

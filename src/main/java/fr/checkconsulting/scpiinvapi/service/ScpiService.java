@@ -1,6 +1,7 @@
 package fr.checkconsulting.scpiinvapi.service;
 
 import fr.checkconsulting.scpiinvapi.dto.response.ScpiInvestmentDto;
+import fr.checkconsulting.scpiinvapi.dto.response.ScpiRepartitionDto;
 import fr.checkconsulting.scpiinvapi.dto.response.ScpiSummaryDto;
 import fr.checkconsulting.scpiinvapi.mapper.ScpiMapper;
 import fr.checkconsulting.scpiinvapi.model.entity.Scpi;
@@ -25,7 +26,6 @@ public class ScpiService {
 
         return scpiMapper.toScpiSummaryDto(scpiRepository.findAll());
 
-
     }
 
     public ScpiInvestmentDto getScpiInvestmentById(Long id) {
@@ -33,5 +33,14 @@ public class ScpiService {
                 .orElseThrow(() -> new IllegalArgumentException("SCPI non trouvée avec l'id: " + id));
 
         return scpiMapper.toScpiInvestmentDto(scpi);
+    }
+
+    public ScpiRepartitionDto getScpiRepartitionById(Long id) {
+      
+
+        Scpi scpi = scpiRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("SCPI non trouvée avec l'id: " + id));
+
+        return scpiMapper.toScpiRepartitionDto(scpi);
     }
 }
