@@ -14,7 +14,7 @@ import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 @RestController
-@RequestMapping("/history")
+@RequestMapping("/api/v1/history")
 public class HistoryResource {
 
     private final HistoryService service;
