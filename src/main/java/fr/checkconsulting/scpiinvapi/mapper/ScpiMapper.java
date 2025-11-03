@@ -1,17 +1,15 @@
 package fr.checkconsulting.scpiinvapi.mapper;
 
-import fr.checkconsulting.scpiinvapi.dto.response.RepartitionItemDto;
+import fr.checkconsulting.scpiinvapi.dto.response.ScpiDetailDto;
 import fr.checkconsulting.scpiinvapi.dto.response.ScpiDismembrementDto;
 import fr.checkconsulting.scpiinvapi.dto.response.ScpiInvestmentDto;
-import fr.checkconsulting.scpiinvapi.dto.response.ScpiRepartitionDto;
 import fr.checkconsulting.scpiinvapi.dto.response.ScpiSummaryDto;
 import fr.checkconsulting.scpiinvapi.model.entity.*;
 import org.mapstruct.*;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
+
 
 @Mapper(componentModel = "spring")
 public interface ScpiMapper {
@@ -37,10 +35,6 @@ public interface ScpiMapper {
     @Mapping(target = "scpiDismembrement", source = "source", qualifiedByName = "extractDismembermentBareme")
     ScpiInvestmentDto toScpiInvestmentDto(Scpi source);
 
-    @Mapping(target = "geographical", source = "locations", qualifiedByName = "mapLocationsToRepartition")
-    @Mapping(target = "sectoral", source = "sectors", qualifiedByName = "mapSectorsToRepartition")
-    ScpiRepartitionDto toScpiRepartitionDto(Scpi source);
-
     @Named("extractLatestSharePrice")
     default BigDecimal extractLatestSharePrice(Scpi scpi) {
         if (scpi.getScpiValues() == null || scpi.getScpiValues().isEmpty()) {
@@ -48,7 +42,7 @@ public interface ScpiMapper {
         }
 
         return scpi.getScpiValues().stream()
-                .max(java.util.Comparator.comparing(ScpiPartValues::getYear))
+                .max(java.util.Comparator.comparing(ScpiPartValues::getValuationYear))
                 .map(ScpiPartValues::getSharePrice)
                 .orElse(null);
     }
@@ -81,7 +75,7 @@ public interface ScpiMapper {
     default BigDecimal extractLastDistributionRate(Scpi scpi) {
 
         return scpi.getDistributionRates().stream()
-                .max(java.util.Comparator.comparing(DistributionRate::getYear))
+                .max(java.util.Comparator.comparing(DistributionRate::getDistributionYear))
                 .map(DistributionRate::getRate).orElse(null);
     }
 
@@ -95,143 +89,6 @@ public interface ScpiMapper {
                 .orElse(null);
     }
 
-    @Named("mapLocationsToRepartition")
-    default List<RepartitionItemDto> mapLocationsToRepartition(List<Location> locations) {
-        if (locations == null || locations.isEmpty()) {
-            return List.of();
-        }
-
-        return locations.stream()
-                .map(location -> RepartitionItemDto.builder()
-                        .label(location.getCountry())
-                        .percentage(location.getPercentage())
-                        .build())
-                .collect(java.util.stream.Collectors.toList());
-    }
-
-    @Named("mapSectorsToRepartition")
-    default List<RepartitionItemDto> mapSectorsToRepartition(List<Sector> sectors) {
-        if (sectors == null || sectors.isEmpty()) {
-            return List.of();
-        }
-
-        return sectors.stream()
-                .map(sector -> RepartitionItemDto.builder()
-                        .label(sector.getName())
-                        .percentage(sector.getPercentage())
-                        .build())
-                .collect(java.util.stream.Collectors.toList());
-    }
-
-    @AfterMapping
-    default void mergeDistributionRates(@MappingTarget Scpi target, Scpi source) {
-        if (source.getDistributionRates() == null)
-            return;
-        if (target.getDistributionRates() == null)
-            target.setDistributionRates(new ArrayList<>());
-
-        for (DistributionRate src : source.getDistributionRates()) {
-            DistributionRate existing = target.getDistributionRates().stream()
-                    .filter(dr -> Objects.equals(dr.getYear(), src.getYear()))
-                    .findFirst()
-                    .orElse(null);
-
-            if (existing != null) {
-                existing.setRate(src.getRate());
-            } else {
-                src.setScpi(target);
-                target.getDistributionRates().add(src);
-            }
-        }
-    }
-
-    @AfterMapping
-    default void mergeDismembermentDiscounts(@MappingTarget Scpi target, Scpi source) {
-        if (source.getDismembermentDiscounts() == null)
-            return;
-        if (target.getDismembermentDiscounts() == null)
-            target.setDismembermentDiscounts(new ArrayList<>());
-
-        for (DismembermentDiscounts src : source.getDismembermentDiscounts()) {
-            DismembermentDiscounts existing = target.getDismembermentDiscounts().stream()
-                    .filter(d -> Objects.equals(d.getDurationYears(), src.getDurationYears()))
-                    .findFirst()
-                    .orElse(null);
-
-            if (existing != null) {
-                existing.setPercentage(src.getPercentage());
-            } else {
-                src.setScpi(target);
-                target.getDismembermentDiscounts().add(src);
-            }
-        }
-    }
-
-    @AfterMapping
-    default void mergeLocations(@MappingTarget Scpi target, Scpi source) {
-        if (source.getLocations() == null)
-            return;
-        if (target.getLocations() == null)
-            target.setLocations(new ArrayList<>());
-
-        for (Location src : source.getLocations()) {
-            Location existing = target.getLocations().stream()
-                    .filter(l -> l.getCountry().equalsIgnoreCase(src.getCountry()))
-                    .findFirst()
-                    .orElse(null);
-
-            if (existing != null) {
-                existing.setPercentage(src.getPercentage());
-            } else {
-                src.setScpi(target);
-                target.getLocations().add(src);
-            }
-        }
-    }
-
-    @AfterMapping
-    default void mergeSectors(@MappingTarget Scpi target, Scpi source) {
-        if (source.getSectors() == null)
-            return;
-        if (target.getSectors() == null)
-            target.setSectors(new ArrayList<>());
-
-        for (Sector src : source.getSectors()) {
-            Sector existing = target.getSectors().stream()
-                    .filter(s -> s.getName().equalsIgnoreCase(src.getName()))
-                    .findFirst()
-                    .orElse(null);
-
-            if (existing != null) {
-                existing.setPercentage(src.getPercentage());
-            } else {
-                src.setScpi(target);
-                target.getSectors().add(src);
-            }
-        }
-    }
-
-    @AfterMapping
-    default void mergeScpiPartValues(@MappingTarget Scpi target, Scpi source) {
-        if (source.getScpiValues() == null)
-            return;
-        if (target.getScpiValues() == null)
-            target.setScpiValues(new ArrayList<>());
-
-        for (ScpiPartValues src : source.getScpiValues()) {
-            ScpiPartValues existing = target.getScpiValues().stream()
-                    .filter(v -> Objects.equals(v.getYear(), src.getYear()))
-                    .findFirst()
-                    .orElse(null);
-
-            if (existing != null) {
-                existing.setSharePrice(src.getSharePrice());
-                existing.setReconstitutionValue(src.getReconstitutionValue());
-            } else {
-                src.setScpi(target);
-                target.getScpiValues().add(src);
-            }
-        }
-    }
+    ScpiDetailDto toScpiDetailDto(Scpi scpi);
 
 }
