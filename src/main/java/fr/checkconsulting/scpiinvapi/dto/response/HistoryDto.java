@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 @Builder
 public class HistoryDto {
 
-    LocalDateTime modification_date;
+    LocalDateTime modificationDate;
     String status;
     int investmentId;
 }
