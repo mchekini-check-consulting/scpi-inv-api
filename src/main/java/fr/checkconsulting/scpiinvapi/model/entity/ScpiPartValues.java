@@ -18,7 +18,7 @@ public class ScpiPartValues {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private Integer year;
+    private Integer valuationYear;
     private BigDecimal sharePrice;
     private BigDecimal reconstitutionValue;
 
