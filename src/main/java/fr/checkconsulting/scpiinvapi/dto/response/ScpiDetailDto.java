@@ -1,5 +1,4 @@
 package fr.checkconsulting.scpiinvapi.dto.response;
-
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -8,22 +7,22 @@ import lombok.NoArgsConstructor;
 import java.math.BigDecimal;
 
 @Data
-@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class ScpiSummaryDto {
-    
-    private Long id;
+@Builder
+public class ScpiDetailDto {
+
     private String name;
-    private String imageUrl;
     private String manager;
-    
+    private BigDecimal capitalization;
+    private BigDecimal sharePrice;
     private Integer minimumSubscription;
-    private Integer cashback;
-    private String advertising;
-    
     private BigDecimal distributionRate;
-    private String country;
-    
-    
+    private BigDecimal subscriptionFees;
+    private BigDecimal managementFees;
+    private Integer enjoymentDelay;
+    private String rentFrequency;
+    private String advertising;
+
+
 }
