@@ -22,7 +22,7 @@ public class History {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private LocalDateTime modificationDate;
+    private LocalDateTime modification_date;
     private String status;
     private int investmentId;
 }
