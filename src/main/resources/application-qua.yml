@@ -4,6 +4,29 @@ spring:
     username: admin
     password: admin
     driver-class-name: org.postgresql.Driver
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: https://keycloak.check-consulting.net/realms/scpi-realm
+          jwk-set-uri: ${spring.security.oauth2.resourceserver.jwt.issuer-uri}/protocol/openid-connect/certs
+          audiences: account
+    jwt:
+      auth:
+        converter:
+          ressource-id: scpi-invest-front
+          principal-attribute: preferred_username
+
+keycloak:
+  auth-server-url: https://keycloak.check-consulting.net
+  realm: scpi-realm
+  resource: scpi-invest-front
+  public-client: true
+  credentials:
+    secret: ""
+  admin:
+    username: admin
+    password: admin
 
 minio:
   url: "http://minio-service.minio.svc.cluster.local:9000"
