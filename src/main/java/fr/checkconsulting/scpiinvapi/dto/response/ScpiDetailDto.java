@@ -11,7 +11,7 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 @Builder
 public class ScpiDetailDto {
-
+    private Long id; 
     private String name;
     private String manager;
     private BigDecimal capitalization;
