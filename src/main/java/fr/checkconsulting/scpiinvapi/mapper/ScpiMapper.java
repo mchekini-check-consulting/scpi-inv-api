@@ -9,9 +9,8 @@ import fr.checkconsulting.scpiinvapi.model.entity.*;
 import org.mapstruct.*;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
+
 
 @Mapper(componentModel = "spring")
 public interface ScpiMapper {
@@ -48,7 +47,7 @@ public interface ScpiMapper {
         }
 
         return scpi.getScpiValues().stream()
-                .max(java.util.Comparator.comparing(ScpiPartValues::getYear))
+                .max(java.util.Comparator.comparing(ScpiPartValues::getValuationYear))
                 .map(ScpiPartValues::getSharePrice)
                 .orElse(null);
     }
@@ -81,7 +80,7 @@ public interface ScpiMapper {
     default BigDecimal extractLastDistributionRate(Scpi scpi) {
 
         return scpi.getDistributionRates().stream()
-                .max(java.util.Comparator.comparing(DistributionRate::getYear))
+                .max(java.util.Comparator.comparing(DistributionRate::getDistributionYear))
                 .map(DistributionRate::getRate).orElse(null);
     }
 

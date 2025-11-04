@@ -11,7 +11,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
 import java.util.List;
 
 @RestController
@@ -41,4 +40,19 @@ public class ScpiResource {
         ScpiRepartitionDto repartition = scpiService.getScpiRepartitionById(id);
         return ResponseEntity.ok(repartition);
     }
+
+    @GetMapping("/details/{slug}")
+    public ScpiDetailDto getScpiDetails(@PathVariable String slug) {
+
+        String[] parts = slug.split("-", 2);
+        if (parts.length < 2) {
+            throw new IllegalArgumentException("Le paramètre 'slug' doit être au format 'nom scpi - manager'.");
+        }
+
+        String scpiName = parts[0].trim();
+        String managerName = parts[1].trim();
+
+        return scpiService.getScpiDetails(scpiName, managerName);
+    }
+
 }

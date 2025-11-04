@@ -101,7 +101,7 @@ public class ScpiItemProcessor implements ItemProcessor<ScpiDto, Scpi> {
             int year = LocalDateTime.now().getYear() - 1;
             for (String part : parts) {
                 rates.add(DistributionRate.builder()
-                        .year(year--)
+                        .distributionYear(year--)
                         .rate(new BigDecimal(part.trim()))
                         .scpi(scpi)
                         .build());
@@ -133,7 +133,7 @@ public class ScpiItemProcessor implements ItemProcessor<ScpiDto, Scpi> {
             int year = LocalDateTime.now().getYear() - 1;
             for (int i = 0; i < sharePrices.length; i++) {
                 values.add(ScpiPartValues.builder()
-                        .year(year--)
+                        .valuationYear(year--)
                         .sharePrice(new BigDecimal(sharePrices[i].trim()))
                         .reconstitutionValue(new BigDecimal(reconstitutionValues[i].trim()))
                         .scpi(scpi)
