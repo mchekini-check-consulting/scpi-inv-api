@@ -1,6 +1,7 @@
 package fr.checkconsulting.scpiinvapi.mapper;
 
 import fr.checkconsulting.scpiinvapi.dto.response.RepartitionItemDto;
+import fr.checkconsulting.scpiinvapi.dto.response.ScpiDetailDto;
 import fr.checkconsulting.scpiinvapi.dto.response.ScpiDismembrementDto;
 import fr.checkconsulting.scpiinvapi.dto.response.ScpiInvestmentDto;
 import fr.checkconsulting.scpiinvapi.dto.response.ScpiRepartitionDto;
@@ -9,8 +10,9 @@ import fr.checkconsulting.scpiinvapi.model.entity.*;
 import org.mapstruct.*;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
-
+import java.util.Objects;
 
 @Mapper(componentModel = "spring")
 public interface ScpiMapper {
@@ -39,6 +41,10 @@ public interface ScpiMapper {
     @Mapping(target = "geographical", source = "locations", qualifiedByName = "mapLocationsToRepartition")
     @Mapping(target = "sectoral", source = "sectors", qualifiedByName = "mapSectorsToRepartition")
     ScpiRepartitionDto toScpiRepartitionDto(Scpi source);
+
+    @Mapping(target = "sharePrice", source = "source", qualifiedByName = "extractLatestSharePrice")
+    @Mapping(target = "distributionRate", source = "source", qualifiedByName = "extractRate")
+    ScpiDetailDto toScpiDetailDto(Scpi source);
 
     @Named("extractLatestSharePrice")
     default BigDecimal extractLatestSharePrice(Scpi scpi) {
@@ -131,7 +137,7 @@ public interface ScpiMapper {
 
         for (DistributionRate src : source.getDistributionRates()) {
             DistributionRate existing = target.getDistributionRates().stream()
-                    .filter(dr -> Objects.equals(dr.getYear(), src.getYear()))
+                    .filter(dr -> Objects.equals(dr.getDistributionYear(), src.getDistributionYear())) // ✅ FIX
                     .findFirst()
                     .orElse(null);
 
@@ -219,7 +225,7 @@ public interface ScpiMapper {
 
         for (ScpiPartValues src : source.getScpiValues()) {
             ScpiPartValues existing = target.getScpiValues().stream()
-                    .filter(v -> Objects.equals(v.getYear(), src.getYear()))
+                    .filter(v -> Objects.equals(v.getValuationYear(), src.getValuationYear()))
                     .findFirst()
                     .orElse(null);
 

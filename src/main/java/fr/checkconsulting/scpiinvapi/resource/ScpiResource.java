@@ -1,5 +1,6 @@
 package fr.checkconsulting.scpiinvapi.resource;
 
+import fr.checkconsulting.scpiinvapi.dto.response.ScpiDetailDto;
 import fr.checkconsulting.scpiinvapi.dto.response.ScpiInvestmentDto;
 import fr.checkconsulting.scpiinvapi.dto.response.ScpiRepartitionDto;
 import fr.checkconsulting.scpiinvapi.dto.response.ScpiSummaryDto;
