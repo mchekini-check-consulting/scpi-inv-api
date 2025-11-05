@@ -1,5 +1,6 @@
 package fr.checkconsulting.scpiinvapi.resource;
 
+import fr.checkconsulting.scpiinvapi.dto.response.DocumentStatusResponse;
 import fr.checkconsulting.scpiinvapi.dto.response.FileBase64Dto;
 import fr.checkconsulting.scpiinvapi.model.enums.DocumentType;
 import fr.checkconsulting.scpiinvapi.service.MinioService;
@@ -20,7 +21,6 @@ public class DocumentResource {
 
     @Value("${spring.profiles.active}")
     String activeProfile;
-
     private final MinioService minioService;
 
     public DocumentResource(MinioService minioService) {
@@ -73,6 +73,11 @@ public class DocumentResource {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
+    }
+
+    @GetMapping("/status")
+    public ResponseEntity<DocumentStatusResponse> getDocumentUploadStatus() {
+        return ResponseEntity.ok(minioService.getDocumentStatus());
     }
 
 

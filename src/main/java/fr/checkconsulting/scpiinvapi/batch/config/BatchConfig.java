@@ -1,6 +1,6 @@
 package fr.checkconsulting.scpiinvapi.batch.config;
 
-import fr.checkconsulting.scpiinvapi.batch.exception.MissingColumnException;
+import fr.checkconsulting.scpiinvapi.exception.MissingColumnException;
 import fr.checkconsulting.scpiinvapi.batch.listener.BatchJobListener;
 import fr.checkconsulting.scpiinvapi.batch.processor.ScpiItemProcessor;
 import fr.checkconsulting.scpiinvapi.batch.report.BatchErrorCollector;
