@@ -1,6 +1,6 @@
 package fr.checkconsulting.scpiinvapi.batch.validator;
 
-import fr.checkconsulting.scpiinvapi.batch.exception.MissingColumnException;
+import fr.checkconsulting.scpiinvapi.exception.MissingColumnException;
 import fr.checkconsulting.scpiinvapi.batch.report.BatchErrorCollector;
 import fr.checkconsulting.scpiinvapi.model.enums.ScpiField;
 import org.springframework.batch.item.file.transform.FieldSet;
