@@ -1,7 +1,11 @@
 package fr.checkconsulting.scpiinvapi.service;
 
 import fr.checkconsulting.scpiinvapi.dto.response.DocumentStatusResponse;
-import fr.checkconsulting.scpiinvapi.exception.DocumentAlreadyUploadedException;
+import fr.checkconsulting.scpiinvapi.mapper.UserDocumentMapper;
+import fr.checkconsulting.scpiinvapi.model.entity.UserDocument;
+import fr.checkconsulting.scpiinvapi.model.enums.DocumentStatus;
+import fr.checkconsulting.scpiinvapi.model.enums.DocumentType;
+import fr.checkconsulting.scpiinvapi.repository.UserDocumentRepository;
 import io.minio.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -10,35 +14,41 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
-import java.util.stream.StreamSupport;
+import java.time.LocalDateTime;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
 
 @Service
 @Slf4j
 public class MinioService {
-
-    private static final String DOCUMENTS_BUCKET = "documents";
 
     @Value("${spring.profiles.active}")
     private String activeProfile;
 
     private final MinioClient minioClient;
     private final UserService userService;
+    private final UserDocumentRepository userDocumentRepository;
+    private final UserDocumentMapper userDocumentMapper;
 
-    public MinioService(MinioClient minioClient, UserService userService) {
+    public MinioService(MinioClient minioClient, UserService userService, UserDocumentRepository userDocumentRepository, UserDocumentMapper userDocumentMapper) {
         this.minioClient = minioClient;
         this.userService = userService;
+        this.userDocumentRepository = userDocumentRepository;
+        this.userDocumentMapper = userDocumentMapper;
     }
 
     public String uploadFile(MultipartFile file, String bucketName) {
         String userId = userService.getUserId();
-        String fileName = file.getOriginalFilename();
+        String userEmail = userService.getEmail();
+        String fullName = userService.getFullName();
 
-        if (hasUserUploadedDocuments(bucketName)) {
-            userService.setDocumentsUploaded(true);
-            throw new DocumentAlreadyUploadedException(
-                    "L'utilisateur " + userId + " a déjà envoyé ses documents."
-            );
-        }
+        String fileName = System.currentTimeMillis() + "-" + file.getOriginalFilename();
+
+        DocumentType type = Arrays.stream(DocumentType.values())
+                .filter(t -> bucketName.endsWith(t.getDocumentType()))
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("Type de document inconnu pour le bucket : " + bucketName));
 
         try (InputStream inputStream = file.getInputStream()) {
             minioClient.putObject(
@@ -49,10 +59,35 @@ public class MinioService {
                             .contentType(file.getContentType())
                             .build()
             );
-            log.info(" Fichier '{}' uploadé dans le bucket '{}' pour l’utilisateur '{}'", fileName, bucketName, userId);
+
+            Optional<UserDocument> existingOpt = userDocumentRepository.findByUserEmailAndType(userEmail, type);
+
+            if (existingOpt.isPresent()) {
+                UserDocument existing = existingOpt.get();
+                userDocumentMapper.updateUploadedFields(existing,
+                        file.getOriginalFilename(),
+                        fileName,
+                        bucketName);
+                existing.setLastUpdatedAt(LocalDateTime.now());
+                userDocumentRepository.save(existing);
+            } else {
+                userDocumentRepository.save(UserDocument.builder()
+                        .userEmail(userEmail)
+                        .fullName(fullName)
+                        .type(type)
+                        .status(DocumentStatus.UPLOADED)
+                        .originalFileName(file.getOriginalFilename())
+                        .storedFileName(fileName)
+                        .bucketName(bucketName)
+                        .uploadedAt(LocalDateTime.now())
+                        .lastUpdatedAt(LocalDateTime.now())
+                        .build());
+            }
+
             return fileName;
+
         } catch (Exception e) {
-            throw new IllegalStateException("Erreur lors de l’upload du fichier " + fileName, e);
+            throw new IllegalStateException("Erreur lors de l’upload du fichier : " + e.getMessage(), e);
         }
     }
 
@@ -100,7 +135,6 @@ public class MinioService {
                             .object(fileName)
                             .build()
             );
-            log.info(" Fichier '{}' supprimé du bucket '{}'", fileName, bucketName);
         } catch (Exception e) {
             throw new IllegalStateException("Erreur lors de la suppression du fichier " + fileName, e);
         }
@@ -119,33 +153,15 @@ public class MinioService {
         }
     }
 
-    public boolean hasUserUploadedDocuments(String bucketName) {
-        String userId = userService.getUserId();
-        try {
-            return StreamSupport.stream(
-                    minioClient.listObjects(
-                            ListObjectsArgs.builder()
-                                    .bucket(bucketName)
-                                    .prefix(userId + "/")
-                                    .recursive(true)
-                                    .build()
-                    ).spliterator(),
-                    false
-            ).findAny().isPresent();
-        } catch (Exception e) {
-            throw new IllegalStateException("Erreur lors de la vérification des documents pour " + userId, e);
-        }
-    }
-
     public DocumentStatusResponse getDocumentStatus() {
-        boolean uploaded = hasUserUploadedDocuments(DOCUMENTS_BUCKET);
-        userService.setDocumentsUploaded(uploaded);
+        String userEmail = userService.getEmail();
+        List<UserDocument> documents = userDocumentRepository.findByUserEmail(userEmail);
 
-        return new DocumentStatusResponse(
-                userService.getUserId(),
-                uploaded
+        boolean allUploaded = Arrays.stream(DocumentType.values())
+                .allMatch(type -> documents.stream()
+                        .anyMatch(doc -> doc.getType() == type && doc.getStatus() == DocumentStatus.UPLOADED));
 
-        );
+        return new DocumentStatusResponse(userEmail, allUploaded);
     }
 
 }
