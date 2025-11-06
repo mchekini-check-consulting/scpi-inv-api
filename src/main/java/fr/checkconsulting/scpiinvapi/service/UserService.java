@@ -24,7 +24,6 @@ public class UserService {
     private String lastName;
     private String firstName;
     private String userId;
-    private boolean documentsUploaded = false;
 
     public UserService() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -34,6 +33,10 @@ public class UserService {
         lastName = jwt.getClaim("family_name");
         firstName = jwt.getClaim("given_name");
         userId = jwt.getClaim("sub");
+    }
+
+    public String getFullName() {
+        return String.format("%s %s", firstName != null ? firstName : "", lastName != null ? lastName : "").trim();
     }
 
 }
