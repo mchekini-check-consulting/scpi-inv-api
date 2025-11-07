@@ -18,7 +18,8 @@ public class DistributionRate {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private Integer year;
+    private Integer distributionYear;
+
     private BigDecimal rate;
 
     @ManyToOne(fetch = FetchType.LAZY)

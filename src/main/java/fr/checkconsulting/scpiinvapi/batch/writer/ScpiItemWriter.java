@@ -1,6 +1,6 @@
 package fr.checkconsulting.scpiinvapi.batch.writer;
 
-import fr.checkconsulting.scpiinvapi.batch.mappers.ScpiMapper;
+import fr.checkconsulting.scpiinvapi.mapper.ScpiMapper;
 import fr.checkconsulting.scpiinvapi.model.entity.Scpi;
 import fr.checkconsulting.scpiinvapi.repository.ScpiRepository;
 import lombok.RequiredArgsConstructor;
@@ -26,28 +26,22 @@ public class ScpiItemWriter implements ItemWriter<Scpi> {
 
         if (items.isEmpty()) return;
 
-        log.info("===== Début du traitement de {} SCPI(s) =====", items.size());
-
-        int createdCount = 0;
-        int updatedCount = 0;
 
         for (Scpi scpi : items) {
-            Optional<Scpi> existingOpt = scpiRepository.findByName(scpi.getName());
+            try {
+                Optional<Scpi> existingOpt = scpiRepository.findByName(scpi.getName());
 
-            if (existingOpt.isPresent()) {
-                Scpi existing = existingOpt.get();
-                scpiMapper.updateScpi(existing, scpi);
-                scpiRepository.save(existing);
-                updatedCount++;
-                log.debug("SCPI mise à jour : {}", existing.getName());
-            } else {
-                scpiRepository.save(scpi);
-                createdCount++;
-                log.debug("Nouvelle SCPI enregistrée : {}", scpi.getName());
+                if (existingOpt.isPresent()) {
+                    Scpi existing = existingOpt.get();
+                    scpiMapper.updateScpi(existing, scpi);
+                    scpiRepository.save(existing);
+                } else {
+                    scpiRepository.save(scpi);
+                }
+            }
+            catch (Exception e) {
+                log.debug("Error while saving scpi {}", scpi.getName(), e);
             }
         }
-
-        log.info("===== Fin du traitement =====");
-        log.info("{} SCPI(s) ajoutée(s), {} SCPI(s) mise(s) à jour.\n", createdCount, updatedCount);
     }
 }

@@ -35,18 +35,19 @@ public class Scpi {
     private String imageUrl;
     private String manager;
 
-    @OneToMany(mappedBy = "scpi", cascade = CascadeType.ALL)
+
+    @OneToMany(mappedBy = "scpi", cascade = CascadeType.ALL,orphanRemoval = true)
     private List<Location> locations;
 
-    @OneToMany(mappedBy = "scpi", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "scpi", cascade = CascadeType.ALL,orphanRemoval = true)
     private List<Sector> sectors;
 
-    @OneToMany(mappedBy = "scpi", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "scpi", cascade = CascadeType.ALL,orphanRemoval = true)
     private List<DistributionRate> distributionRates;
 
-    @OneToMany(mappedBy = "scpi", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "scpi", cascade = CascadeType.ALL,orphanRemoval = true)
     private List<ScpiPartValues> scpiValues;
 
-    @OneToMany(mappedBy = "scpi", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "scpi", cascade = CascadeType.ALL,orphanRemoval = true)
     private List<DismembermentDiscounts> dismembermentDiscounts;
 }

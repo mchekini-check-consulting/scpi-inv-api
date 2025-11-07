@@ -23,8 +23,7 @@ public enum ScpiField {
     DEMEMBREMENT("demembrement"),
     CASHBACK("cashback"),
     VERSEMENT_PROGRAMME("versement_programme"),
-    PUBLICITE("publicite"),
-    VALEUR_DE_RECONSTITUTION("valeur_reconstitution");
+    PUBLICITE("publicite");
 
     private final String columnName;
 

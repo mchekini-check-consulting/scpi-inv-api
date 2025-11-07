@@ -1,8 +1,11 @@
 package fr.checkconsulting.scpiinvapi.batch.config;
 
+import fr.checkconsulting.scpiinvapi.exception.MissingColumnException;
+import fr.checkconsulting.scpiinvapi.batch.listener.BatchJobListener;
 import fr.checkconsulting.scpiinvapi.batch.processor.ScpiItemProcessor;
-
-import fr.checkconsulting.scpiinvapi.batch.reader.ScpiItemReader;
+import fr.checkconsulting.scpiinvapi.batch.report.BatchErrorCollector;
+import fr.checkconsulting.scpiinvapi.batch.report.GenerateErrorReport;
+import fr.checkconsulting.scpiinvapi.batch.report.GenerateErrorReportTasklet;
 import fr.checkconsulting.scpiinvapi.batch.writer.ScpiItemWriter;
 import fr.checkconsulting.scpiinvapi.dto.request.ScpiDto;
 import fr.checkconsulting.scpiinvapi.model.entity.Scpi;
@@ -13,6 +16,7 @@ import org.springframework.batch.core.configuration.annotation.EnableBatchProces
 import org.springframework.batch.core.job.builder.JobBuilder;
 import org.springframework.batch.core.repository.JobRepository;
 import org.springframework.batch.core.step.builder.StepBuilder;
+import org.springframework.batch.item.file.FlatFileItemReader;
 import org.springframework.batch.item.file.FlatFileParseException;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -27,28 +31,34 @@ import java.net.SocketTimeoutException;
 @Slf4j
 public class BatchConfig {
 
-    private final ScpiItemReader scpiItemReader;
+    private final FlatFileItemReader<ScpiDto> scpiReader;
     private final ScpiItemProcessor processor;
     private final ScpiItemWriter writer;
+    private final BatchJobListener batchJobListener;
+    private final GenerateErrorReport errorReportService;
+    private final BatchErrorCollector batchErrorCollector;
 
-    public BatchConfig(ScpiItemReader scpiItemReader, ScpiItemProcessor processor, ScpiItemWriter writer) {
-        this.scpiItemReader = scpiItemReader;
+    public BatchConfig(FlatFileItemReader<ScpiDto> scpiReader, ScpiItemProcessor processor, ScpiItemWriter writer,
+                       BatchJobListener batchJobListener, GenerateErrorReport errorReportService,
+                       BatchErrorCollector batchErrorCollector)
+    {
+        this.scpiReader = scpiReader;
         this.processor = processor;
         this.writer = writer;
+        this.batchJobListener = batchJobListener;
+        this.errorReportService = errorReportService;
+        this.batchErrorCollector = batchErrorCollector;
     }
 
     @Bean
-    public Step importScpiStep(JobRepository jobRepository,
-                               PlatformTransactionManager transactionManager
-                               ) {
+    public Step importScpiStep(JobRepository jobRepository, PlatformTransactionManager transactionManager) {
         return new StepBuilder("importScpiStep", jobRepository)
                 .<ScpiDto, Scpi>chunk(10, transactionManager)
-                .reader(scpiItemReader.reader())
+                .reader(scpiReader)
                 .processor(processor)
                 .writer(writer)
                 .faultTolerant()
-                .skipLimit(100)
-                .skip(Exception.class)
+                .noSkip(MissingColumnException.class)
                 .noSkip(FlatFileParseException.class)
                 .retry(TransientDataAccessException.class)
                 .retry(SocketTimeoutException.class)
@@ -58,9 +68,25 @@ public class BatchConfig {
     }
 
     @Bean
-    public Job importScpiJob(JobRepository jobRepository, Step importScpiStep) {
+    public Step generateErrorReportStep(JobRepository jobRepository,
+                                        PlatformTransactionManager transactionManager) {
+        return new StepBuilder("generateErrorReportStep", jobRepository)
+                .tasklet(new GenerateErrorReportTasklet(errorReportService, batchErrorCollector), transactionManager)
+                .build();
+    }
+
+    @Bean
+    public Job importScpiJob(JobRepository jobRepository, PlatformTransactionManager transactionManager) {
+        Step importStep = importScpiStep(jobRepository, transactionManager);
+        Step errorStep = generateErrorReportStep(jobRepository, transactionManager);
+
         return new JobBuilder("importScpiJob", jobRepository)
-                .start(importScpiStep)
+                .listener(batchJobListener)
+                .start(importStep)
+                .on("FAILED").to(errorStep)
+                .from(importStep)
+                .on("COMPLETED").end()
+                .end()
                 .build();
     }
 }

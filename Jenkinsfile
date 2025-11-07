@@ -10,7 +10,6 @@ node("ci-node"){
         sh "chmod 777 mvnw && ./mvnw clean test"
     }
 
-
     stage("Build Jar file"){
         sh "./mvnw package -DskipTests"
     }
