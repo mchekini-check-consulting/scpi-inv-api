@@ -1,4 +1,3 @@
-
 spring:
   application:
     name: scpi-inv-api
@@ -25,6 +24,13 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
+
+  kafka:
+    bootstrap-servers: localhost:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+
 jwt:
   auth:
     converter:
@@ -32,7 +38,7 @@ jwt:
       principal-attribute: preferred_username
 
 minio:
-  url: "http://localhost:9000"
+  url: http://localhost:9000
   access-key: admin
   secret-key: admin-admin
 
@@ -50,3 +56,7 @@ keycloak:
 logging:
   level:
     org.flywaydb.core: INFO
+    org.springframework.kafka: DEBUG
+    org.apache.kafka: INFO
+
+

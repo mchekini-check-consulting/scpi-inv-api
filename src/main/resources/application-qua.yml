@@ -28,6 +28,14 @@ keycloak:
     username: admin
     password: admin
 
+  kafka:
+    bootstrap-servers: kafka-qua-svc:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+    properties:
+      spring.json.add.type.headers: false
+
 minio:
   url: "http://minio-service.minio.svc.cluster.local:9000"
   access-key: admin
