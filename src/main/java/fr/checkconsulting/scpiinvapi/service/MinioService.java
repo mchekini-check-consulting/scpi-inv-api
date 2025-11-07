@@ -1,5 +1,6 @@
 package fr.checkconsulting.scpiinvapi.service;
 
+import fr.checkconsulting.scpiinvapi.dto.request.UserDocumentDto;
 import fr.checkconsulting.scpiinvapi.dto.response.DocumentStatusResponse;
 import fr.checkconsulting.scpiinvapi.mapper.UserDocumentMapper;
 import fr.checkconsulting.scpiinvapi.model.entity.UserDocument;
@@ -30,12 +31,14 @@ public class MinioService {
     private final UserService userService;
     private final UserDocumentRepository userDocumentRepository;
     private final UserDocumentMapper userDocumentMapper;
+    private final KafkaProducerService kafkaProducerService;
 
-    public MinioService(MinioClient minioClient, UserService userService, UserDocumentRepository userDocumentRepository, UserDocumentMapper userDocumentMapper) {
+    public MinioService(MinioClient minioClient, UserService userService, UserDocumentRepository userDocumentRepository, UserDocumentMapper userDocumentMapper, KafkaProducerService kafkaProducerService) {
         this.minioClient = minioClient;
         this.userService = userService;
         this.userDocumentRepository = userDocumentRepository;
         this.userDocumentMapper = userDocumentMapper;
+        this.kafkaProducerService = kafkaProducerService;
     }
 
     public String uploadFile(MultipartFile file, String bucketName) {
@@ -43,7 +46,7 @@ public class MinioService {
         String userEmail = userService.getEmail();
         String fullName = userService.getFullName();
 
-        String fileName = System.currentTimeMillis() + "-" + file.getOriginalFilename();
+        String fileName = file.getOriginalFilename();
 
         DocumentType type = Arrays.stream(DocumentType.values())
                 .filter(t -> bucketName.endsWith(t.getDocumentType()))
@@ -51,6 +54,7 @@ public class MinioService {
                 .orElseThrow(() -> new IllegalArgumentException("Type de document inconnu pour le bucket : " + bucketName));
 
         try (InputStream inputStream = file.getInputStream()) {
+
             minioClient.putObject(
                     PutObjectArgs.builder()
                             .bucket(bucketName)
@@ -62,34 +66,33 @@ public class MinioService {
 
             Optional<UserDocument> existingOpt = userDocumentRepository.findByUserEmailAndType(userEmail, type);
 
-            if (existingOpt.isPresent()) {
-                UserDocument existing = existingOpt.get();
-                userDocumentMapper.updateUploadedFields(existing,
-                        file.getOriginalFilename(),
-                        fileName,
-                        bucketName);
-                existing.setLastUpdatedAt(LocalDateTime.now());
-                userDocumentRepository.save(existing);
-            } else {
-                userDocumentRepository.save(UserDocument.builder()
-                        .userEmail(userEmail)
-                        .fullName(fullName)
-                        .type(type)
-                        .status(DocumentStatus.UPLOADED)
-                        .originalFileName(file.getOriginalFilename())
-                        .storedFileName(fileName)
-                        .bucketName(bucketName)
-                        .uploadedAt(LocalDateTime.now())
-                        .lastUpdatedAt(LocalDateTime.now())
-                        .build());
-            }
+            UserDocumentDto documentDto = existingOpt
+                    .map(userDocumentMapper::toDto)
+                    .orElseGet(() -> UserDocumentDto.builder()
+                            .userEmail(userEmail)
+                            .fullName(fullName)
+                            .type(type)
+                            .build());
 
+            documentDto.setStatus(DocumentStatus.UPLOADED);
+            documentDto.setOriginalFileName(file.getOriginalFilename());
+            documentDto.setStoredFileName(fileName);
+            documentDto.setBucketName(bucketName);
+            documentDto.setUploadedAt(LocalDateTime.now());
+            documentDto.setLastUpdatedAt(LocalDateTime.now());
+
+            UserDocument entity = userDocumentMapper.toEntity(documentDto);
+            userDocumentRepository.save(entity);
+            kafkaProducerService.sendDocumentEvent(documentDto);
+
+            log.info("Document [{}] uploadé et envoyé à Kafka.", documentDto.getStoredFileName());
             return fileName;
 
         } catch (Exception e) {
             throw new IllegalStateException("Erreur lors de l’upload du fichier : " + e.getMessage(), e);
         }
     }
+
 
     public void uploadFile(byte[] data, String bucketName, String fileName, String contentType) {
         try (InputStream inputStream = new ByteArrayInputStream(data)) {
