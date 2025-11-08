@@ -30,7 +30,7 @@ keycloak:
     password: admin
 
   kafka:
-    bootstrap-servers: kafka-int-svc:9092
+    bootstrap-servers: kafka-svc.kafka:9092
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
