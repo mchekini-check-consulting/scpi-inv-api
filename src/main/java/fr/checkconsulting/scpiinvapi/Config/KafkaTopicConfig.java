@@ -7,7 +7,6 @@ import org.springframework.kafka.config.TopicBuilder;
 
 @Configuration
 public class KafkaTopicConfig {
-
     private final TopicNameProvider topicNameProvider;
 
     public KafkaTopicConfig(TopicNameProvider topicNameProvider) {
