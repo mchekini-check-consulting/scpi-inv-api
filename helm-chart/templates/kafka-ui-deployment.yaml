@@ -23,11 +23,12 @@ spec:
             - containerPort: 8080
           env:
             - name: KAFKA_CLUSTERS_0_NAME
-              value: scpi-cluster
+              value: {{ .Values.kafkaUI.clusterName }}
             - name: KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS
-              value: kafka-svc.kafka:9092
+              value: {{ .Values.kafkaUI.bootstrapServers }}
             - name: KAFKA_CLUSTERS_0_ZOOKEEPER
-              value: zookeeper.kafka:2181
+              value: {{ .Values.kafkaUI.zookeeper }}
             - name: SERVER_PORT
               value: "8080"
       restartPolicy: Always
+
