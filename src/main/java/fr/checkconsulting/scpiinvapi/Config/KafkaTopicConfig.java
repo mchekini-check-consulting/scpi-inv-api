@@ -1,7 +1,6 @@
 package fr.checkconsulting.scpiinvapi.config;
 
 import jakarta.annotation.PostConstruct;
-import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.clients.admin.TopicListing;
@@ -13,7 +12,6 @@ import org.springframework.kafka.core.KafkaAdmin;
 import java.util.Collections;
 import java.util.Map;
 
-@Slf4j
 @Configuration
 @Profile("!test")
 public class KafkaTopicConfig {
@@ -35,18 +33,10 @@ public class KafkaTopicConfig {
                 .build();
 
         try (AdminClient admin = AdminClient.create(kafkaAdmin.getConfigurationProperties())) {
-            if (topicExists(admin, topicName)) {
-                log.info(" Topic '{}' already exists — skipping creation.", topicName);
-                return;
+            Map<String, TopicListing> topics = admin.listTopics().namesToListings().get();
+            if (!topics.containsKey(topicName)) {
+                admin.createTopics(Collections.singletonList(topic)).all().get();
             }
-
-            admin.createTopics(Collections.singletonList(topic)).all().get();
-            log.info(" Topic '{}' created successfully.", topicName);
         }
-    }
-
-    private boolean topicExists(AdminClient admin, String topicName) throws Exception {
-        Map<String, TopicListing> topics = admin.listTopics().namesToListings().get();
-        return topics.containsKey(topicName);
     }
 }
