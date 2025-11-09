@@ -17,15 +17,13 @@ import lombok.NoArgsConstructor;
 public class ScpiInvestmentDto {
     private Long id;
     private String name;
-   
-    
     private Integer minimumSubscription;
     private BigDecimal sharePrice;
-    private Boolean dismembermentActive; 
-  
-    
+    private Boolean dismembermentActive;
     private BigDecimal distributionRate;
     private List<ScpiDismembrementDto> scpiDismembrement;
+    private boolean hasInvested;
+    private BigDecimal totalInvestedAmount;
 
-    
+
 }
