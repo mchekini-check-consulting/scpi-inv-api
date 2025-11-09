@@ -26,7 +26,7 @@ public interface HistoryRepository extends JpaRepository<History, Long> {
             from History h3
             where h3.investmentId = h.investmentId
         )
-        order by h.investmentId
+        order by h.modificationDate desc
         """)
     List<HistoryDto> findLatestHistoryPerInvestment();
 
