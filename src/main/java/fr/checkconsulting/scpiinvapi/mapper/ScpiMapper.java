@@ -44,6 +44,7 @@ public interface ScpiMapper {
 
     @Mapping(target = "sharePrice", source = "source", qualifiedByName = "extractLatestSharePrice")
     @Mapping(target = "distributionRate", source = "source", qualifiedByName = "extractRate")
+    @Mapping(source = "scpiValues", target = "scpiPartValues")
     ScpiDetailDto toScpiDetailDto(Scpi source);
 
     @Named("extractLatestSharePrice")

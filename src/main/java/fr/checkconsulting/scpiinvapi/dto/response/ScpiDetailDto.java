@@ -5,6 +5,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 @Data
 @NoArgsConstructor
@@ -23,6 +24,6 @@ public class ScpiDetailDto {
     private Integer enjoymentDelay;
     private String rentFrequency;
     private String advertising;
-
+    private List<ScpiPartValuesDto> scpiPartValues;
 
 }
