@@ -6,6 +6,7 @@ import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.clients.admin.TopicListing;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 import org.springframework.kafka.config.TopicBuilder;
 import org.springframework.kafka.core.KafkaAdmin;
 
@@ -14,6 +15,7 @@ import java.util.Map;
 
 @Slf4j
 @Configuration
+@Profile("!test")
 public class KafkaTopicConfig {
 
     private final KafkaAdmin kafkaAdmin;
