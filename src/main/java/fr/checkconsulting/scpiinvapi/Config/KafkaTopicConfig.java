@@ -1,24 +1,50 @@
 package fr.checkconsulting.scpiinvapi.config;
 
+import jakarta.annotation.PostConstruct;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.admin.NewTopic;
-import org.springframework.context.annotation.Bean;
+import org.apache.kafka.clients.admin.TopicListing;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.config.TopicBuilder;
+import org.springframework.kafka.core.KafkaAdmin;
 
+import java.util.Collections;
+import java.util.Map;
+
+@Slf4j
 @Configuration
 public class KafkaTopicConfig {
+
+    private final KafkaAdmin kafkaAdmin;
     private final TopicNameProvider topicNameProvider;
 
-    public KafkaTopicConfig(TopicNameProvider topicNameProvider) {
+    public KafkaTopicConfig(KafkaAdmin kafkaAdmin, TopicNameProvider topicNameProvider) {
+        this.kafkaAdmin = kafkaAdmin;
         this.topicNameProvider = topicNameProvider;
     }
 
-    @Bean
-    public NewTopic documentValidationTopic() {
-        return TopicBuilder.name(topicNameProvider.getDocumentValidationTopic())
+    @PostConstruct
+    public void setupTopic() throws Exception {
+        String topicName = topicNameProvider.getDocumentValidationTopic();
+        NewTopic topic = TopicBuilder.name(topicName)
                 .partitions(1)
                 .replicas(1)
                 .build();
+
+        try (AdminClient admin = AdminClient.create(kafkaAdmin.getConfigurationProperties())) {
+            if (topicExists(admin, topicName)) {
+                log.info(" Topic '{}' already exists — skipping creation.", topicName);
+                return;
+            }
+
+            admin.createTopics(Collections.singletonList(topic)).all().get();
+            log.info(" Topic '{}' created successfully.", topicName);
+        }
     }
 
+    private boolean topicExists(AdminClient admin, String topicName) throws Exception {
+        Map<String, TopicListing> topics = admin.listTopics().namesToListings().get();
+        return topics.containsKey(topicName);
+    }
 }
