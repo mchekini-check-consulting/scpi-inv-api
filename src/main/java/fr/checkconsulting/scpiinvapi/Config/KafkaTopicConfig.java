@@ -33,10 +33,11 @@ public class KafkaTopicConfig {
                 .build();
 
         try (AdminClient admin = AdminClient.create(kafkaAdmin.getConfigurationProperties())) {
-            Map<String, TopicListing> topics = admin.listTopics().namesToListings().get();
-            if (!topics.containsKey(topicName)) {
+            boolean exists = admin.listTopics().names().get().contains(topicName);
+            if (!exists) {
                 admin.createTopics(Collections.singletonList(topic)).all().get();
             }
         }
     }
+
 }
