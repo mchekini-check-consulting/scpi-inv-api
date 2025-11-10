@@ -1,8 +1,6 @@
 spring:
   application:
     name: scpi-inv-api
-  profiles:
-    active: local
 
   datasource:
     url: jdbc:postgresql://localhost:5432/postgres
