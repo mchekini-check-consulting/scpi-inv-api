@@ -1,9 +1,7 @@
 package fr.checkconsulting.scpiinvapi.service;
 
-import fr.checkconsulting.scpiinvapi.dto.response.ScpiDetailDto;
-import fr.checkconsulting.scpiinvapi.dto.response.ScpiInvestmentDto;
-import fr.checkconsulting.scpiinvapi.dto.response.ScpiRepartitionDto;
-import fr.checkconsulting.scpiinvapi.dto.response.ScpiSummaryDto;
+import fr.checkconsulting.scpiinvapi.dto.request.ScpiWithRatesDTORequest;
+import fr.checkconsulting.scpiinvapi.dto.response.*;
 import fr.checkconsulting.scpiinvapi.mapper.ScpiMapper;
 import fr.checkconsulting.scpiinvapi.model.entity.DistributionRate;
 import fr.checkconsulting.scpiinvapi.model.entity.Investment;
@@ -100,5 +98,12 @@ public class ScpiService {
                 .orElseThrow(() -> new IllegalArgumentException("SCPI non trouvée avec l'id: " + id));
 
         return scpiMapper.toScpiRepartitionDto(scpi);
+    }
+
+
+    public List<ScpiWithRatesDTORequest> getAllForComparator() {
+        return scpiRepository.findAll().stream()
+                .map(scpiMapper::toScpiWithRatesDTO)
+                .toList();
     }
 }
