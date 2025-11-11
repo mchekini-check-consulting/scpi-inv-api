@@ -12,22 +12,22 @@ import java.util.List;
 public interface HistoryRepository extends JpaRepository<History, Long> {
 
     @Query("""
-        select new fr.checkconsulting.scpiinvapi.dto.response.HistoryDto(
-            h.modificationDate,
-            (select min(h2.modificationDate)
-             from History h2
-             where h2.investmentId = h.investmentId),
-            h.status,
-            h.investmentId
-        )
-        from History h
-        where h.modificationDate = (
-            select max(h3.modificationDate)
-            from History h3
-            where h3.investmentId = h.investmentId
-        )
-        order by h.modificationDate desc
-        """)
+    select new fr.checkconsulting.scpiinvapi.dto.response.HistoryDto(
+        h.modificationDate,
+        (select min(h2.modificationDate)
+         from History h2
+         where h2.investment.id = h.investment.id),
+        h.status,
+        h.investment.id
+    )
+    from History h
+    where h.modificationDate = (
+        select max(h3.modificationDate)
+        from History h3
+        where h3.investment.id = h.investment.id
+    )
+    order by h.investment.id
+    """)
     List<HistoryDto> findLatestHistoryPerInvestment();
 
 

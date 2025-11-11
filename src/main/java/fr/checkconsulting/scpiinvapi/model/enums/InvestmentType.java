@@ -1,8 +1,8 @@
 package fr.checkconsulting.scpiinvapi.model.enums;
 
 public enum InvestmentType {
-        PLEINE_PROPRIETE,
-        NUE_PROPRIETE,
-        USUFRUIT
+    FULL_OWNERSHIP,
+    BARE_OWNERSHIP,
+    USUFRUCT
 
 }
