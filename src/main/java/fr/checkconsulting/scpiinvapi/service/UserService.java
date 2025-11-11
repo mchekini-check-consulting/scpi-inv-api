@@ -23,7 +23,10 @@ public class UserService {
     private String username;
     private String lastName;
     private String firstName;
+    private String phoneNumber;
     private String userId;
+    private String dateOfBirth;
+    private boolean documentsUploaded = false;
 
     public UserService() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -32,6 +35,7 @@ public class UserService {
         email = jwt.getClaim("email");
         lastName = jwt.getClaim("family_name");
         firstName = jwt.getClaim("given_name");
+        phoneNumber = jwt.getClaim("phone");
         userId = jwt.getClaim("sub");
     }
 
