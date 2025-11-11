@@ -9,6 +9,7 @@ import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Data
@@ -23,6 +24,7 @@ public class Investment {
     private Long id;
     private BigDecimal investmentAmount;
     private BigDecimal numberOfShares;
+
     @Enumerated(EnumType.STRING)
     private InvestmentType investmentType;
     private Integer dismembermentYears;
@@ -35,5 +37,8 @@ public class Investment {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "investor_id")
     private Investor investor;
+
+    @OneToMany(mappedBy = "investment", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<History> history;
 
 }

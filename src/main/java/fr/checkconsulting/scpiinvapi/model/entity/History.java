@@ -1,9 +1,7 @@
 package fr.checkconsulting.scpiinvapi.model.entity;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import fr.checkconsulting.scpiinvapi.model.enums.InvestmentStatus;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -22,7 +20,13 @@ public class History {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    private LocalDateTime creationDate;
     private LocalDateTime modificationDate;
-    private String status;
-    private int investmentId;
+
+    @Enumerated(EnumType.STRING)
+    private InvestmentStatus status;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "investment_id", nullable = false)
+    private Investment investment;
 }

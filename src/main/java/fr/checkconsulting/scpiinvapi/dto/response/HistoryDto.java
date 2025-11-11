@@ -1,5 +1,6 @@
 package fr.checkconsulting.scpiinvapi.dto.response;
 
+import fr.checkconsulting.scpiinvapi.model.enums.InvestmentStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -16,5 +17,17 @@ public class HistoryDto {
     LocalDateTime modificationDate;
     LocalDateTime creationDate;
     String status;
-    int investmentId;
+    Long investmentId;
+
+    public HistoryDto(LocalDateTime modificationDate, LocalDateTime creationDate, InvestmentStatus status, Long investmentId) {
+        this.modificationDate = modificationDate;
+        this.creationDate = creationDate;
+        this.investmentId = investmentId;
+        this.status = switch (status) {
+            case PENDING -> "PENDING";
+            case SUCCESS -> "SUCCESS";
+            case FAILED -> "FAILED";
+        };
+    }
+
 }
