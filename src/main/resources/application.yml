@@ -58,5 +58,10 @@ logging:
     org.flywaydb.core: INFO
     org.springframework.kafka: DEBUG
     org.apache.kafka: INFO
-
-
+  file:
+    name: /app/logs/scpi-inv-api.log
+    max-size: 10MB
+    max-history: 10
+  pattern:
+    file: "%d{yyyy-MM-dd HH:mm:ss} - %logger{36} - %msg%n"
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %logger{36} - %msg%n"
