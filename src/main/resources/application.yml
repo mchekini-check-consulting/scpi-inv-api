@@ -2,20 +2,20 @@ spring:
   application:
     name: scpi-inv-api
   profiles:
-    active: local
+    active: ${APP_ENV:local}
 
   datasource:
-    url: jdbc:postgresql://localhost:5432/postgres
-    username: postgres
-    password: postgres
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/postgres}
+    username: ${DATABASE_USERNAME:postgres}
+    password: ${DATABASE_PASSWORD:postgres}
     driver-class-name: org.postgresql.Driver
 
   security:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: https://keycloak.check-consulting.net/realms/scpi-realm
-          jwk-set-uri: ${spring.security.oauth2.resourceserver.jwt.issuer-uri}/protocol/openid-connect/certs
+          issuer-uri: ${OAUTH2_ISSUER_URI:https://keycloak.check-consulting.net/realms/scpi-realm}
+          jwk-set-uri: ${OAUTH2_ISSUER_URI:https://keycloak.check-consulting.net/realms/scpi-realm}/protocol/openid-connect/certs
           audiences: account
 
   jpa:
@@ -24,39 +24,49 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
+        show_sql: false
+        format_sql: false
 
   kafka:
-    bootstrap-servers: kafka-svc.kafka:9094
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
 
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
 jwt:
   auth:
     converter:
-      ressource-id: scpi-invest-front
-      principal-attribute: preferred_username
+      ressource-id: ${OAUTH2_RESOURCE_ID:scpi-invest-front}
+      principal-attribute: ${OAUTH2_PRINCIPAL_ATTRIBUTE:preferred_username}
 
 minio:
-  url: http://localhost:9000
-  access-key: admin
-  secret-key: admin-admin
+  url: ${MINIO_URL:http://localhost:9000}
+  access-key: ${MINIO_ACCESS_KEY:admin}
+  secret-key: ${MINIO_SECRET_KEY:admin-admin}
 
 keycloak:
-  auth-server-url: https://keycloak.check-consulting.net
-  realm: scpi-realm
-  resource: scpi-invest-front
+  auth-server-url: ${KEYCLOAK_SERVER_URL:https://keycloak.check-consulting.net}
+  realm: ${KEYCLOAK_REALM:scpi-realm}
+  resource: ${OAUTH2_RESOURCE_ID:scpi-invest-front}
   public-client: true
   credentials:
     secret: ""
   admin:
-    username: admin
-    password: admin
+    username: ${KEYCLOAK_ADMIN_USERNAME:admin}
+    password: ${KEYCLOAK_ADMIN_PASSWORD:admin}
+
+notification:
+  service:
+    url: ${SCPI_INV_NOTIFICATION_URL:http://localhost:8081}
+    send-email-path: ${SEND_EMAIL_PATH:/api/notifications/email}
 
 logging:
   level:
-    org.flywaydb.core: INFO
-    org.springframework.kafka: DEBUG
-    org.apache.kafka: INFO
-
-
+    org.flywaydb.core: ${FLYWAY_LOG_LEVEL:INFO}
+    org.springframework.kafka: ${KAFKA_LOG_LEVEL:INFO}
+    org.apache.kafka: ${KAFKA_LOG_LEVEL:INFO}
+    fr.checkconsulting: ${APP_LOG_LEVEL:INFO}

@@ -24,20 +24,22 @@ public class InvestmentService {
     private final InvestorRepository investorRepository;
     private final InvestmentMapper investmentMapper;
     private final UserService userService;
+    private final NotificationService notificationService;
 
     public InvestmentService(
             InvestmentRepository investmentRepository,
             HistoryRepository historyRepository,
             ScpiRepository scpiRepository,
             InvestorRepository investorRepository,
-            InvestmentMapper investmentMapper, UserService userService
-    ) {
+            InvestmentMapper investmentMapper, UserService userService,
+            NotificationService notificationService) {
         this.investmentRepository = investmentRepository;
         this.historyRepository = historyRepository;
         this.scpiRepository = scpiRepository;
         this.investorRepository = investorRepository;
         this.investmentMapper = investmentMapper;
         this.userService = userService;
+        this.notificationService = notificationService;
     }
 
     public void createInvestment(InvestmentRequestDTO request, String userId) {
@@ -76,5 +78,6 @@ public class InvestmentService {
                 .build();
 
         historyRepository.save(history);
+        notificationService.sendEmailNotification(userService.getEmail(),investment);
     }
 }

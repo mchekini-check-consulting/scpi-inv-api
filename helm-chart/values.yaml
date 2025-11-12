@@ -4,4 +4,31 @@ image:
   name: scpi-inv-api
 
 application:
-  environment: int
+  environment: "int"
+  scpi_inv_notification_url: "http://notification-service.svc.cluster.local:8080/api/notifications"
+  send_email_path: "/send-email"
+
+  database:
+    url: "jdbc:postgresql://postgresql-service:5432/scpi-db"
+
+  security:
+    oauth2:
+      issuer_uri: "https://keycloak.check-consulting.net/realms/scpi-realm"
+      resource_id: "scpi-invest-front"
+      principal_attribute: "preferred_username"
+
+  kafka:
+    bootstrap_servers: "kafka-service:9092"
+
+  minio:
+    url: "http://minio-service:9000"
+
+  keycloak:
+    server_url: "https://keycloak.check-consulting.net"
+    realm: "scpi-realm"
+
+  logging:
+    level:
+      flyway: "INFO"
+      kafka: "INFO"
+      app: "INFO"
