@@ -31,7 +31,9 @@ public class NotificationService {
         EmailNotificationRequest emailRequest = EmailNotificationRequest.builder()
                 .to(recipient)
                 .subject("Confirmation de votre demande d'investissement")
-                .htmlContent(emailContent)
+                .body(emailContent)
+                .bodyType("HTML")
+                .from("me.chekini@gmail.com")
                 .build();
 
         notificationClient.sendEmailNotification(emailRequest);

@@ -10,7 +10,9 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class EmailNotificationRequest {
+    private String from;
     private String to;
     private String subject;
-    private String htmlContent;
+    private String body;
+    private String bodyType;
 }
