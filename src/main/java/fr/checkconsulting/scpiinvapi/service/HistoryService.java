@@ -12,15 +12,16 @@ public class HistoryService {
 
     private final HistoryRepository repository;
     private final HistoryMapper mapper;
+    private final UserService userService;
 
-    public HistoryService(HistoryRepository repository, HistoryMapper mapper) {
+    public HistoryService(HistoryRepository repository, HistoryMapper mapper, UserService userService) {
         this.repository = repository;
         this.mapper = mapper;
+        this.userService = userService;
     }
 
     public List<HistoryDto> getHistory() {
-
-        return repository.findLatestHistoryPerInvestment();
+        return repository.findLatestHistoryPerInvestment(userService.getUserId());
     }
 
     public List<HistoryDto> getHistoryByInvestmentId(Long id) {
