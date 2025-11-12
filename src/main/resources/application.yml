@@ -3,7 +3,9 @@ spring:
     name: scpi-inv-api
   profiles:
     active: local
-
+  cloud:
+    compatibility-verifier:
+      enabled: false
   datasource:
     url: jdbc:postgresql://localhost:5432/postgres
     username: postgres
@@ -60,3 +62,4 @@ logging:
     org.apache.kafka: INFO
 
 
+notification-service-url: http://notification-service.scpi-inv-int:8080
