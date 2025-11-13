@@ -4,6 +4,7 @@ import fr.checkconsulting.scpiinvapi.dto.response.HistoryDto;
 import fr.checkconsulting.scpiinvapi.model.entity.History;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -26,9 +27,10 @@ public interface HistoryRepository extends JpaRepository<History, Long> {
         from History h3
         where h3.investment.id = h.investment.id
     )
-    order by h.investment.id
+    and h.investment.investor.userId = :investorId
+    order by h.modificationDate desc
     """)
-    List<HistoryDto> findLatestHistoryPerInvestment();
+    List<HistoryDto> findLatestHistoryPerInvestment(@Param("investorId") String investorId);
 
 
     List<History> findByInvestmentId(Long investmentId);
