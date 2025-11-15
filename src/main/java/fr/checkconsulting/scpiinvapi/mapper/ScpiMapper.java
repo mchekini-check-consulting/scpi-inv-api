@@ -1,6 +1,6 @@
 package fr.checkconsulting.scpiinvapi.mapper;
 
-import fr.checkconsulting.scpiinvapi.dto.request.ScpiWithRatesDTORequest;
+import fr.checkconsulting.scpiinvapi.dto.request.ScpiWithRatesDTOResponse;
 import fr.checkconsulting.scpiinvapi.dto.response.RepartitionItemDto;
 import fr.checkconsulting.scpiinvapi.dto.response.ScpiDetailDto;
 import fr.checkconsulting.scpiinvapi.dto.response.ScpiDismembrementDto;
@@ -129,8 +129,8 @@ public interface ScpiMapper {
                         .build())
                 .collect(java.util.stream.Collectors.toList());
     }
-    ScpiWithRatesDTORequest toScpiWithRatesDTO(Scpi scpi);
+    ScpiWithRatesDTOResponse toScpiWithRatesDTO(Scpi scpi);
 
-    List<ScpiWithRatesDTORequest> toScpiWithRatesDTOList(List<Scpi> scpis);
+    List<ScpiWithRatesDTOResponse> toScpiWithRatesDTOList(List<Scpi> scpis);
 
 }
