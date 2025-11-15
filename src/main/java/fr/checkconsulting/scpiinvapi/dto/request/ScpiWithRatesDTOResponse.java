@@ -12,7 +12,7 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class ScpiWithRatesDTORequest {
+public class ScpiWithRatesDTOResponse {
     private Long id;
     private String name;
     private BigDecimal capitalization;
