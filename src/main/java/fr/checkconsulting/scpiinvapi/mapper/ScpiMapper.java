@@ -1,17 +1,12 @@
 package fr.checkconsulting.scpiinvapi.mapper;
 
 import fr.checkconsulting.scpiinvapi.dto.request.ScpiWithRatesDTORequest;
-import fr.checkconsulting.scpiinvapi.dto.response.RepartitionItemDto;
-import fr.checkconsulting.scpiinvapi.dto.response.ScpiDetailDto;
-import fr.checkconsulting.scpiinvapi.dto.response.ScpiDismembrementDto;
-import fr.checkconsulting.scpiinvapi.dto.response.ScpiInvestmentDto;
-import fr.checkconsulting.scpiinvapi.dto.response.ScpiRepartitionDto;
-import fr.checkconsulting.scpiinvapi.dto.response.ScpiSummaryDto;
+import fr.checkconsulting.scpiinvapi.dto.response.*;
 import fr.checkconsulting.scpiinvapi.model.entity.*;
 import org.mapstruct.*;
 
 import java.math.BigDecimal;
-
+import java.math.RoundingMode;
 import java.util.List;
 
 
@@ -46,6 +41,7 @@ public interface ScpiMapper {
     @Mapping(target = "sharePrice", source = "source", qualifiedByName = "extractLatestSharePrice")
     @Mapping(target = "distributionRate", source = "source", qualifiedByName = "extractRate")
     @Mapping(source = "scpiValues", target = "scpiPartValues")
+    @Mapping(target = "capitalization", source = "source", qualifiedByName = "convertCapitalization")
     ScpiDetailDto toScpiDetailDto(Scpi source);
 
     @Named("extractLatestSharePrice")
@@ -129,6 +125,14 @@ public interface ScpiMapper {
                         .build())
                 .collect(java.util.stream.Collectors.toList());
     }
+
+
+    @Named("convertCapitalization")
+    default BigDecimal convertCapitalization(Scpi scpi) {
+
+        return scpi.getCapitalization().divide(BigDecimal.valueOf(1000000), RoundingMode.HALF_UP);
+    }
+
     ScpiWithRatesDTORequest toScpiWithRatesDTO(Scpi scpi);
 
     List<ScpiWithRatesDTORequest> toScpiWithRatesDTOList(List<Scpi> scpis);
