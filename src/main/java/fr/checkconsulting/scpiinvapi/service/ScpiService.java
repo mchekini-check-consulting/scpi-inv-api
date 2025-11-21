@@ -1,6 +1,6 @@
 package fr.checkconsulting.scpiinvapi.service;
 
-import fr.checkconsulting.scpiinvapi.dto.request.ScpiWithRatesDTORequest;
+import fr.checkconsulting.scpiinvapi.dto.response.ScpiWithRatesDTOResponse;
 import fr.checkconsulting.scpiinvapi.dto.response.*;
 import fr.checkconsulting.scpiinvapi.mapper.ScpiMapper;
 import fr.checkconsulting.scpiinvapi.model.entity.DistributionRate;
@@ -101,7 +101,7 @@ public class ScpiService {
     }
 
 
-    public List<ScpiWithRatesDTORequest> getAllForComparator() {
+    public List<ScpiWithRatesDTOResponse> getAllForComparator() {
         return scpiRepository.findAll().stream()
                 .map(scpiMapper::toScpiWithRatesDTO)
                 .toList();

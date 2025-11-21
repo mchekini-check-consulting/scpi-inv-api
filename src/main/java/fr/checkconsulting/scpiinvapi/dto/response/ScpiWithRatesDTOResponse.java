@@ -1,5 +1,6 @@
-package fr.checkconsulting.scpiinvapi.dto.request;
+package fr.checkconsulting.scpiinvapi.dto.response;
 
+import fr.checkconsulting.scpiinvapi.dto.request.DistributionRateDTORequest;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -12,7 +13,7 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class ScpiWithRatesDTORequest {
+public class ScpiWithRatesDTOResponse {
     private Long id;
     private String name;
     private BigDecimal capitalization;
