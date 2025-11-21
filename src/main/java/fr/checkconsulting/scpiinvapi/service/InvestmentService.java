@@ -14,6 +14,8 @@ import fr.checkconsulting.scpiinvapi.repository.ScpiRepository;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 
 @Service
 public class InvestmentService {
@@ -72,8 +74,8 @@ public class InvestmentService {
 
         History history = History.builder()
                 .investment(saved)
-                .creationDate(LocalDateTime.now())
-                .modificationDate(LocalDateTime.now())
+                .creationDate(ZonedDateTime.now(ZoneId.of("Europe/Paris")).toLocalDateTime())
+                .modificationDate(ZonedDateTime.now(ZoneId.of("Europe/Paris")).toLocalDateTime())
                 .status(InvestmentStatus.PENDING)
                 .build();
 
