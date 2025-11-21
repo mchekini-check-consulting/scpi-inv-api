@@ -1,10 +1,9 @@
 package fr.checkconsulting.scpiinvapi.mapper;
 
-import fr.checkconsulting.scpiinvapi.dto.request.ScpiWithRatesDTORequest;
+import fr.checkconsulting.scpiinvapi.dto.response.ScpiWithRatesDTOResponse;
 import fr.checkconsulting.scpiinvapi.dto.response.*;
 import fr.checkconsulting.scpiinvapi.model.entity.*;
 import org.mapstruct.*;
-
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.List;
@@ -133,8 +132,6 @@ public interface ScpiMapper {
         return scpi.getCapitalization().divide(BigDecimal.valueOf(1000000), RoundingMode.HALF_UP);
     }
 
-    ScpiWithRatesDTORequest toScpiWithRatesDTO(Scpi scpi);
-
-    List<ScpiWithRatesDTORequest> toScpiWithRatesDTOList(List<Scpi> scpis);
+    ScpiWithRatesDTOResponse toScpiWithRatesDTO(Scpi scpi);
 
 }

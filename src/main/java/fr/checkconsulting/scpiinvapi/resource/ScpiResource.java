@@ -1,6 +1,6 @@
 package fr.checkconsulting.scpiinvapi.resource;
 
-import fr.checkconsulting.scpiinvapi.dto.request.ScpiWithRatesDTORequest;
+import fr.checkconsulting.scpiinvapi.dto.response.ScpiWithRatesDTOResponse;
 import fr.checkconsulting.scpiinvapi.dto.response.ScpiDetailDto;
 import fr.checkconsulting.scpiinvapi.dto.response.ScpiInvestmentDto;
 import fr.checkconsulting.scpiinvapi.dto.response.ScpiRepartitionDto;
@@ -61,7 +61,7 @@ public class ScpiResource {
     }
 
     @GetMapping("/comparator-scpis")
-    public ResponseEntity<List<ScpiWithRatesDTORequest>> getComparatorData() {
+    public ResponseEntity<List<ScpiWithRatesDTOResponse>> getComparatorData() {
         return ResponseEntity.ok(scpiService.getAllForComparator());
     }
 }
