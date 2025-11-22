@@ -6,7 +6,9 @@ import fr.checkconsulting.scpiinvapi.model.entity.*;
 import org.mapstruct.*;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 
 
 @Mapper(componentModel = "spring")
@@ -134,4 +136,41 @@ public interface ScpiMapper {
 
     ScpiWithRatesDTOResponse toScpiWithRatesDTO(Scpi scpi);
 
+    @Mapping(target = "yieldDistributionRate", source = ".", qualifiedByName = "latestYield")
+    @Mapping(target = "sharePrice",           source = ".", qualifiedByName = "latestSharePrice")
+    @Mapping(target = "sectors",              source = "sectors", qualifiedByName = "toRepartitionItems")
+    ScpiSimulatorDTOResponse toSimulatorDto(Scpi scpi);
+
+    @Named("latestYield")
+    default BigDecimal latestYield(Scpi scpi) {
+        return Optional.ofNullable(scpi.getDistributionRates())
+                .orElse(List.of())
+                .stream()
+                .max(Comparator.comparing(DistributionRate::getDistributionYear))
+                .map(DistributionRate::getRate)
+                .orElse(null);
+    }
+
+    @Named("latestSharePrice")
+    default BigDecimal latestSharePrice(Scpi scpi) {
+        return Optional.ofNullable(scpi.getScpiValues())
+                .orElse(List.of())
+                .stream()
+                .max(Comparator.comparing(ScpiPartValues::getValuationYear))
+                .map(ScpiPartValues::getSharePrice)
+                .orElse(null);
+    }
+
+    @Named("toRepartitionItems")
+    default List<RepartitionItemDto> toRepartitionItems(List<Sector> sectors) {
+        if (sectors == null || sectors.isEmpty()) {
+            return List.of();
+        }
+        return sectors.stream()
+                .map(s -> RepartitionItemDto.builder()
+                        .label(s.getName())
+                        .percentage(s.getPercentage())
+                        .build())
+                .toList();
+    }
 }
