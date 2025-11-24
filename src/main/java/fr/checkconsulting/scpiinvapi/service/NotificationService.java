@@ -5,6 +5,7 @@ import fr.checkconsulting.scpiinvapi.dto.request.EmailNotificationRequest;
 import fr.checkconsulting.scpiinvapi.model.entity.Investment;
 import fr.checkconsulting.scpiinvapi.model.entity.Notification;
 import fr.checkconsulting.scpiinvapi.repository.NotificationRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
@@ -12,6 +13,7 @@ import org.thymeleaf.context.Context;
 import java.time.LocalDateTime;
 
 @Service
+@Slf4j
 public class NotificationService {
     private final NotificationRepository repository;
     private final ScpiInvNotificationClient notificationClient;
@@ -36,14 +38,17 @@ public class NotificationService {
                 .from("me.chekini@gmail.com")
                 .build();
 
-        notificationClient.sendEmailNotification(emailRequest);
-
-        repository.save(Notification.builder()
-                .recipient(recipient)
-                .date(LocalDateTime.now())
-                .type("EMAIL")
-                .investment(investment)
-                .build());
+        try {
+            notificationClient.sendEmailNotification(emailRequest);
+            repository.save(Notification.builder()
+                    .recipient(recipient)
+                    .date(LocalDateTime.now())
+                    .type("EMAIL")
+                    .investment(investment)
+                    .build());
+        } catch (Exception e) {
+            log.error("Erreur lors de l'envoi de l'email au service de notification", e);
+        }
     }
 
     private String generateEmailContent(Investment investment) {
