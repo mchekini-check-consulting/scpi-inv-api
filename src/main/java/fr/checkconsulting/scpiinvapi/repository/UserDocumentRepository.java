@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface UserDocumentRepository extends JpaRepository<UserDocument, Long> {
+public interface UserDocumentRepository extends JpaRepository<UserDocument, String> {
 
     Optional<UserDocument> findByUserEmailAndType(String userEmail, DocumentType type);
 

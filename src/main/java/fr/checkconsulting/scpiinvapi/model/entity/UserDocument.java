@@ -16,8 +16,7 @@ import java.time.LocalDateTime;
 public class UserDocument {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private String id;
 
     private String userEmail;
     private String fullName;

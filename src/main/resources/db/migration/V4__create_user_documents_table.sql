@@ -1,5 +1,5 @@
 CREATE TABLE user_documents (
-    id BIGSERIAL PRIMARY KEY,
+    id VARCHAR(36) PRIMARY KEY,
     user_email VARCHAR(255) NOT NULL,
     full_name VARCHAR(255),
     type VARCHAR(50) NOT NULL,

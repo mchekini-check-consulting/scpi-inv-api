@@ -19,6 +19,7 @@ import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 @Slf4j
@@ -45,6 +46,8 @@ public class MinioService {
         String userId = userService.getUserId();
         String userEmail = userService.getEmail();
         String fullName = userService.getFullName();
+        String documentId = UUID.randomUUID().toString();
+
 
         String fileName = file.getOriginalFilename();
 
@@ -66,23 +69,26 @@ public class MinioService {
 
             Optional<UserDocument> existingOpt = userDocumentRepository.findByUserEmailAndType(userEmail, type);
 
-            UserDocumentDto documentDto = existingOpt
-                    .map(userDocumentMapper::toDto)
-                    .orElseGet(() -> UserDocumentDto.builder()
+            UserDocument entity = existingOpt.orElseGet(() ->
+                    UserDocument.builder()
+                            .id(documentId)
                             .userEmail(userEmail)
                             .fullName(fullName)
                             .type(type)
-                            .build());
+                            .build()
+            );
 
-            documentDto.setStatus(DocumentStatus.UPLOADED);
-            documentDto.setOriginalFileName(file.getOriginalFilename());
-            documentDto.setStoredFileName(fileName);
-            documentDto.setBucketName(bucketName);
-            documentDto.setUploadedAt(LocalDateTime.now());
-            documentDto.setLastUpdatedAt(LocalDateTime.now());
+            entity.setStatus(DocumentStatus.UPLOADED);
+            entity.setOriginalFileName(file.getOriginalFilename());
+            entity.setStoredFileName(fileName);
+            entity.setBucketName(bucketName);
+            entity.setUploadedAt(LocalDateTime.now());
+            entity.setLastUpdatedAt(LocalDateTime.now());
 
-            UserDocument entity = userDocumentMapper.toEntity(documentDto);
-            userDocumentRepository.save(entity);
+            UserDocument saved = userDocumentRepository.save(entity);
+
+            UserDocumentDto documentDto = userDocumentMapper.toDto(saved);
+
             kafkaProducerService.sendDocumentEvent(documentDto);
 
             log.info("Document [{}] uploadé et envoyé à Kafka.", documentDto.getStoredFileName());

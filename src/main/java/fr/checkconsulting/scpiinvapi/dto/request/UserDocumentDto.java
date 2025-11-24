@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class UserDocumentDto {
 
-    private Long id;
+    private String id;
     private String userEmail;
     private String fullName;
     private DocumentType type;

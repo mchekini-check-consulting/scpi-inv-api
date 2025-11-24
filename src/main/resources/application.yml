@@ -60,6 +60,7 @@ logging:
     org.flywaydb.core: INFO
     org.springframework.kafka: DEBUG
     org.apache.kafka: INFO
+    org.springframework.kafka.listener.KafkaMessageListenerContainer: WARN
 
 
 notification-service-url: http://notification-service.scpi-inv-int:8080
