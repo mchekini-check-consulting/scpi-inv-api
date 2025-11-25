@@ -20,8 +20,9 @@ public class InvestmentResponseDto {
     private InvestmentType investmentType;
     private Integer dismembermentYears;
     private LocalDateTime investmentDate;
+    private BigDecimal distributionRate;
+    private String scpiManagerName;
     
-  
     private Long scpiId;
     private String scpiName;
     private String scpiType; 
