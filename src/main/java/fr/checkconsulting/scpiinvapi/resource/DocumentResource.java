@@ -1,8 +1,10 @@
 package fr.checkconsulting.scpiinvapi.resource;
 
+import fr.checkconsulting.scpiinvapi.dto.request.UserDocumentDto;
 import fr.checkconsulting.scpiinvapi.dto.response.DocumentStatusResponse;
 import fr.checkconsulting.scpiinvapi.dto.response.FileBase64Dto;
 import fr.checkconsulting.scpiinvapi.model.enums.DocumentType;
+import fr.checkconsulting.scpiinvapi.service.DocumentService;
 import fr.checkconsulting.scpiinvapi.service.MinioService;
 import io.minio.StatObjectResponse;
 import org.springframework.beans.factory.annotation.Value;
@@ -13,6 +15,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Base64;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -22,9 +25,10 @@ public class DocumentResource {
     @Value("${spring.profiles.active}")
     String activeProfile;
     private final MinioService minioService;
-
-    public DocumentResource(MinioService minioService) {
+    private final DocumentService documentService;
+    public DocumentResource(MinioService minioService, DocumentService documentService) {
         this.minioService = minioService;
+        this.documentService = documentService;
     }
 
     @PostMapping("/upload")
@@ -79,6 +83,14 @@ public class DocumentResource {
     public ResponseEntity<DocumentStatusResponse> getDocumentUploadStatus() {
         return ResponseEntity.ok(minioService.getDocumentStatus());
     }
+
+    @GetMapping("/by-email")
+    public List<UserDocumentDto> getByEmail(
+            @RequestParam String email
+    ) {
+        return documentService.getDocumentsByUserEmail(email);
+    }
+
 
 
 }
