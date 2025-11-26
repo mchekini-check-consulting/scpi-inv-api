@@ -1,11 +1,8 @@
 package fr.checkconsulting.scpiinvapi.resource;
 
-import fr.checkconsulting.scpiinvapi.dto.response.ScpiWithRatesDTOResponse;
-import fr.checkconsulting.scpiinvapi.dto.response.ScpiDetailDto;
-import fr.checkconsulting.scpiinvapi.dto.response.ScpiInvestmentDto;
-import fr.checkconsulting.scpiinvapi.dto.response.ScpiRepartitionDto;
-import fr.checkconsulting.scpiinvapi.dto.response.ScpiSummaryDto;
+import fr.checkconsulting.scpiinvapi.dto.response.*;
 import fr.checkconsulting.scpiinvapi.service.ScpiService;
+import io.swagger.v3.oas.annotations.Operation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -63,5 +60,19 @@ public class ScpiResource {
     @GetMapping("/comparator-scpis")
     public ResponseEntity<List<ScpiWithRatesDTOResponse>> getComparatorData() {
         return ResponseEntity.ok(scpiService.getAllForComparator());
+    }
+
+
+    @Operation(
+            summary = "Liste des SCPI disponibles pour le simulateur",
+            description = """
+        Retourne toutes les SCPI pleines propriétés (démembrement = false) 
+        avec le dérnier rendement de distribution  (année la plus récente).
+        Utilisé par le simulateur d'investissement.
+        """
+    )
+    @GetMapping("/simulator")
+    public List<ScpiSimulatorDTOResponse> getScpiSimulatorData() {
+        return scpiService.getScpiForSimulator();
     }
 }

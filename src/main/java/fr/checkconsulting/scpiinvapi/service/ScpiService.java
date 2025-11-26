@@ -106,4 +106,14 @@ public class ScpiService {
                 .map(scpiMapper::toScpiWithRatesDTO)
                 .toList();
     }
+
+    public List<ScpiSimulatorDTOResponse> getScpiForSimulator() {
+        return scpiRepository.findByDismembermentIsFalse().stream()
+           .map(scpiMapper::toSimulatorDto)
+           .sorted(Comparator
+                   .<ScpiSimulatorDTOResponse, BigDecimal>comparing(
+                           dto -> dto.getYieldDistributionRate() != null ? dto.getYieldDistributionRate() : BigDecimal.ZERO)
+                   .reversed())
+           .toList();
+ }
 }
