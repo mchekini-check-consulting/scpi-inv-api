@@ -40,7 +40,6 @@ public interface ScpiMapper {
     @Mapping(target = "sharePrice", source = "source", qualifiedByName = "extractLatestSharePrice")
     @Mapping(target = "distributionRate", source = "source", qualifiedByName = "extractRate")
     @Mapping(source = "scpiValues", target = "scpiPartValues")
-    @Mapping(target = "capitalization", source = "source", qualifiedByName = "convertCapitalization")
     ScpiDetailDto toScpiDetailDto(Scpi source);
 
     @Named("extractLatestSharePrice")
@@ -123,13 +122,6 @@ public interface ScpiMapper {
                         .percentage(sector.getPercentage())
                         .build())
                 .collect(java.util.stream.Collectors.toList());
-    }
-
-
-    @Named("convertCapitalization")
-    default BigDecimal convertCapitalization(Scpi scpi) {
-
-        return scpi.getCapitalization().divide(BigDecimal.valueOf(1000000), RoundingMode.HALF_UP);
     }
 
     ScpiWithRatesDTOResponse toScpiWithRatesDTO(Scpi scpi);
