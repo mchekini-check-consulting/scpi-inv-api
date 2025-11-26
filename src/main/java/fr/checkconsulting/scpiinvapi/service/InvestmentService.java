@@ -1,6 +1,9 @@
 package fr.checkconsulting.scpiinvapi.service;
 
 import fr.checkconsulting.scpiinvapi.dto.request.InvestmentRequestDTO;
+
+import fr.checkconsulting.scpiinvapi.dto.response.InvestmentResponseDto;
+import fr.checkconsulting.scpiinvapi.dto.response.PortfolioSummaryDto;
 import fr.checkconsulting.scpiinvapi.mapper.InvestmentMapper;
 import fr.checkconsulting.scpiinvapi.model.entity.History;
 import fr.checkconsulting.scpiinvapi.model.entity.Investment;
@@ -13,9 +16,11 @@ import fr.checkconsulting.scpiinvapi.repository.InvestorRepository;
 import fr.checkconsulting.scpiinvapi.repository.ScpiRepository;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.util.List;
 
 @Service
 public class InvestmentService {
@@ -33,7 +38,8 @@ public class InvestmentService {
             HistoryRepository historyRepository,
             ScpiRepository scpiRepository,
             InvestorRepository investorRepository,
-            InvestmentMapper investmentMapper, UserService userService,
+            InvestmentMapper investmentMapper, 
+            UserService userService,
             NotificationService notificationService) {
         this.investmentRepository = investmentRepository;
         this.historyRepository = historyRepository;
@@ -80,6 +86,37 @@ public class InvestmentService {
                 .build();
 
         historyRepository.save(history);
-        notificationService.sendEmailNotification(userService.getEmail(),investment);
+        notificationService.sendEmailNotification(userService.getEmail(), investment);
+    }
+
+   
+    public PortfolioSummaryDto getInvestorPortfolio(String userId, String sortBy) {
+       
+        List<Investment> investments;
+        if ("amount".equalsIgnoreCase(sortBy)) {
+            investments = investmentRepository.findByInvestorUserIdOrderByInvestmentAmountDesc(userId);
+        } else {
+       
+            investments = investmentRepository.findByInvestorUserIdOrderByInvestmentDateDesc(userId);
+        }
+        
+
+        BigDecimal totalAmount = investmentRepository.calculateTotalInvestedAmount(userId);
+        if (totalAmount == null) {
+            totalAmount = BigDecimal.ZERO;
+        }
+        
+     
+        Long distinctScpis = investmentRepository.countDistinctScpisByInvestorUserId(userId);
+        
+     
+        List<InvestmentResponseDto> investmentDTOs = investmentMapper.toResponseDTOList(investments);
+        
+        return PortfolioSummaryDto.builder()
+                .totalInvestedAmount(totalAmount)
+                .totalInvestments(investments.size())
+                .totalScpis(distinctScpis != null ? distinctScpis.intValue() : 0)
+                .investments(investmentDTOs)
+                .build();
     }
 }
