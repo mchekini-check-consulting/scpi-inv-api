@@ -3,12 +3,15 @@ package fr.checkconsulting.scpiinvapi.service;
 import fr.checkconsulting.scpiinvapi.dto.request.InvestmentRequestDTO;
 
 import fr.checkconsulting.scpiinvapi.dto.response.InvestmentResponseDto;
+import fr.checkconsulting.scpiinvapi.dto.response.InvestorPortfolioDistributionDTO;
 import fr.checkconsulting.scpiinvapi.dto.response.PortfolioSummaryDto;
+import fr.checkconsulting.scpiinvapi.dto.response.RepartitionItemDto;
 import fr.checkconsulting.scpiinvapi.mapper.InvestmentMapper;
 import fr.checkconsulting.scpiinvapi.model.entity.History;
 import fr.checkconsulting.scpiinvapi.model.entity.Investment;
 import fr.checkconsulting.scpiinvapi.model.entity.Investor;
 import fr.checkconsulting.scpiinvapi.model.entity.Scpi;
+import fr.checkconsulting.scpiinvapi.model.entity.Sector;
 import fr.checkconsulting.scpiinvapi.model.enums.InvestmentStatus;
 import fr.checkconsulting.scpiinvapi.repository.HistoryRepository;
 import fr.checkconsulting.scpiinvapi.repository.InvestmentRepository;
@@ -17,10 +20,14 @@ import fr.checkconsulting.scpiinvapi.repository.ScpiRepository;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class InvestmentService {
@@ -38,7 +45,7 @@ public class InvestmentService {
             HistoryRepository historyRepository,
             ScpiRepository scpiRepository,
             InvestorRepository investorRepository,
-            InvestmentMapper investmentMapper, 
+            InvestmentMapper investmentMapper,
             UserService userService,
             NotificationService notificationService) {
         this.investmentRepository = investmentRepository;
@@ -89,34 +96,103 @@ public class InvestmentService {
         notificationService.sendEmailNotification(userService.getEmail(), investment);
     }
 
-   
     public PortfolioSummaryDto getInvestorPortfolio(String userId, String sortBy) {
-       
+
         List<Investment> investments;
         if ("amount".equalsIgnoreCase(sortBy)) {
             investments = investmentRepository.findByInvestorUserIdOrderByInvestmentAmountDesc(userId);
         } else {
-       
+
             investments = investmentRepository.findByInvestorUserIdOrderByInvestmentDateDesc(userId);
         }
-        
 
         BigDecimal totalAmount = investmentRepository.calculateTotalInvestedAmount(userId);
         if (totalAmount == null) {
             totalAmount = BigDecimal.ZERO;
         }
-        
-     
+
         Long distinctScpis = investmentRepository.countDistinctScpisByInvestorUserId(userId);
-        
-     
+
         List<InvestmentResponseDto> investmentDTOs = investmentMapper.toResponseDTOList(investments);
-        
+
         return PortfolioSummaryDto.builder()
                 .totalInvestedAmount(totalAmount)
                 .totalInvestments(investments.size())
                 .totalScpis(distinctScpis != null ? distinctScpis.intValue() : 0)
                 .investments(investmentDTOs)
                 .build();
+    }
+
+    public InvestorPortfolioDistributionDTO getPortfolioDistribution(String userId) {
+
+        List<Investment> investments = investmentRepository
+                .findByInvestorUserIdOrderByInvestmentDateDesc(userId);
+
+        BigDecimal totalInvestedAmount = investments.stream()
+                .map(Investment::getInvestmentAmount)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        if (totalInvestedAmount.compareTo(BigDecimal.ZERO) == 0) {
+            return InvestorPortfolioDistributionDTO.builder()
+                    .totalInvestedAmount(BigDecimal.ZERO)
+                    .sectoral(List.of())
+                    .geographical(List.of())
+                    .build();
+        }
+
+        List<RepartitionItemDto> sectoralDistribution = calculateSectoralDistribution(investments, totalInvestedAmount);
+
+        List<RepartitionItemDto> geographicalDistribution = List.of();
+
+        return InvestorPortfolioDistributionDTO.builder()
+                .totalInvestedAmount(totalInvestedAmount)
+                .sectoral(sectoralDistribution)
+                .geographical(geographicalDistribution)
+                .build();
+    }
+
+    private List<RepartitionItemDto> calculateSectoralDistribution(
+            List<Investment> investments,
+            BigDecimal totalInvestedAmount) {
+
+        Map<String, BigDecimal> sectorAmounts = new HashMap<>();
+
+        for (Investment investment : investments) {
+            Scpi scpi = investment.getScpi();
+
+            if (scpi.getSectors() == null || scpi.getSectors().isEmpty()) {
+                continue;
+            }
+
+           
+            for (Sector sector : scpi.getSectors()) {
+                String sectorName = sector.getName();
+
+                BigDecimal sectorContribution = investment.getInvestmentAmount()
+                        .multiply(sector.getPercentage())
+                        .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
+
+                sectorAmounts.merge(sectorName, sectorContribution, BigDecimal::add);
+            }
+        }
+
+        // Calculer les pourcentages et créer les DTOs
+        return sectorAmounts.entrySet().stream()
+                .map(entry -> {
+                    String sectorName = entry.getKey();
+                    BigDecimal sectorAmount = entry.getValue();
+
+                    // Formule : Exposition secteur = (montant secteur / montant total) × 100
+                    BigDecimal percentage = sectorAmount
+                            .multiply(BigDecimal.valueOf(100))
+                            .divide(totalInvestedAmount, 2, RoundingMode.HALF_UP);
+
+                    return RepartitionItemDto.builder()
+                            .label(sectorName)
+                            .percentage(percentage)
+                            .build();
+                })
+                .sorted((r1, r2) -> r2.getPercentage().compareTo(r1.getPercentage())) // Tri décroissant
+                .collect(Collectors.toList());
     }
 }
