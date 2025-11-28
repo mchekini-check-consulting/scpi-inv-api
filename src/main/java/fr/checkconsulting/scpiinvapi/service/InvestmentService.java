@@ -3,9 +3,9 @@ package fr.checkconsulting.scpiinvapi.service;
 import fr.checkconsulting.scpiinvapi.dto.request.InvestmentRequestDTO;
 
 import fr.checkconsulting.scpiinvapi.dto.response.InvestmentResponseDto;
-import fr.checkconsulting.scpiinvapi.dto.response.InvestorPortfolioDistributionDTO;
 import fr.checkconsulting.scpiinvapi.dto.response.PortfolioSummaryDto;
 import fr.checkconsulting.scpiinvapi.dto.response.RepartitionItemDto;
+import fr.checkconsulting.scpiinvapi.dto.response.ScpiRepartitionDto;
 import fr.checkconsulting.scpiinvapi.mapper.InvestmentMapper;
 import fr.checkconsulting.scpiinvapi.model.entity.History;
 import fr.checkconsulting.scpiinvapi.model.entity.Investment;
@@ -123,7 +123,7 @@ public class InvestmentService {
                 .build();
     }
 
-    public InvestorPortfolioDistributionDTO getPortfolioDistribution(String userId) {
+    public ScpiRepartitionDto getPortfolioDistribution(String userId) {
 
         List<Investment> investments = investmentRepository
                 .findByInvestorUserIdOrderByInvestmentDateDesc(userId);
@@ -133,7 +133,7 @@ public class InvestmentService {
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         if (totalInvestedAmount.compareTo(BigDecimal.ZERO) == 0) {
-            return InvestorPortfolioDistributionDTO.builder()
+            return ScpiRepartitionDto.builder()
                     .totalInvestedAmount(BigDecimal.ZERO)
                     .sectoral(List.of())
                     .geographical(List.of())
@@ -144,7 +144,7 @@ public class InvestmentService {
 
         List<RepartitionItemDto> geographicalDistribution = List.of();
 
-        return InvestorPortfolioDistributionDTO.builder()
+        return ScpiRepartitionDto.builder()
                 .totalInvestedAmount(totalInvestedAmount)
                 .sectoral(sectoralDistribution)
                 .geographical(geographicalDistribution)

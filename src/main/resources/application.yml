@@ -65,6 +65,3 @@ logging:
 
 
 notification-service-url: http://notification-service.scpi-inv-int:8080
-
-server:
-  port: 8085

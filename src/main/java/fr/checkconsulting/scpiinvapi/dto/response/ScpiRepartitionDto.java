@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @Data
@@ -12,6 +13,7 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 public class ScpiRepartitionDto {
+    private BigDecimal totalInvestedAmount; 
     private List<RepartitionItemDto> geographical;
     private List<RepartitionItemDto> sectoral;
 }

@@ -1,8 +1,8 @@
 package fr.checkconsulting.scpiinvapi.resource;
 
 import fr.checkconsulting.scpiinvapi.dto.request.InvestmentRequestDTO;
-import fr.checkconsulting.scpiinvapi.dto.response.InvestorPortfolioDistributionDTO;
 import fr.checkconsulting.scpiinvapi.dto.response.PortfolioSummaryDto;
+import fr.checkconsulting.scpiinvapi.dto.response.ScpiRepartitionDto;
 import fr.checkconsulting.scpiinvapi.service.InvestmentService;
 import fr.checkconsulting.scpiinvapi.service.UserService;
 import jakarta.validation.Valid;
@@ -44,9 +44,9 @@ public class InvestmentResource {
     }
 
     @GetMapping("/portfolio-distribution")
-    public ResponseEntity<InvestorPortfolioDistributionDTO> getPortfolioDistribution() {
+    public ResponseEntity<ScpiRepartitionDto> getPortfolioDistribution() {
         String userId = userService.getUserId();
-        InvestorPortfolioDistributionDTO distribution = investmentService.getPortfolioDistribution(userId);
+        ScpiRepartitionDto distribution = investmentService.getPortfolioDistribution(userId);
         return ResponseEntity.ok(distribution);
     }
 
