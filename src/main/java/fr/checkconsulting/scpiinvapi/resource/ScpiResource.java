@@ -71,7 +71,7 @@ public class ScpiResource {
         Utilisé par le simulateur d'investissement.
         """
     )
-    @GetMapping("/simulator")
+    @GetMapping("/scpis-full-ownership")
     public List<ScpiSimulatorDTOResponse> getScpiSimulatorData() {
         return scpiService.getScpiForSimulator();
     }
