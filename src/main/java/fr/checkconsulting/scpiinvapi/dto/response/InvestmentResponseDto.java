@@ -26,5 +26,6 @@ public class InvestmentResponseDto {
     private Long scpiId;
     private String scpiName;
     private String scpiType; 
+    private Long investmentDurationMonths;
 
 }
