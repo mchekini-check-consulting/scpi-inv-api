@@ -131,6 +131,8 @@ public interface ScpiMapper {
     @Mapping(target = "yieldDistributionRate", source = ".", qualifiedByName = "latestYield")
     @Mapping(target = "sharePrice",           source = ".", qualifiedByName = "latestSharePrice")
     @Mapping(target = "sectors",              source = "sectors", qualifiedByName = "toRepartitionItems")
+    @Mapping(target = "locations",            source = "locations", qualifiedByName = "mapLocationsToRepartition")
+
     ScpiSimulatorDTOResponse toSimulatorDto(Scpi scpi);
 
     @Named("latestYield")

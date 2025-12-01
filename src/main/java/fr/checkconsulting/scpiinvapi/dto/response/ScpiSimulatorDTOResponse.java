@@ -19,4 +19,5 @@ public class ScpiSimulatorDTOResponse {
     private BigDecimal sharePrice;
     private Integer minimumSubscription;
     private List<RepartitionItemDto> sectors;
+    private List<RepartitionItemDto> locations;
 }
