@@ -1,6 +1,7 @@
 package fr.checkconsulting.scpiinvapi.resource;
 
 import fr.checkconsulting.scpiinvapi.dto.request.InvestmentRequestDTO;
+import fr.checkconsulting.scpiinvapi.dto.response.MonthlyRevenueDTO;
 import fr.checkconsulting.scpiinvapi.dto.response.PortfolioSummaryDto;
 import fr.checkconsulting.scpiinvapi.dto.response.ScpiRepartitionDto;
 import fr.checkconsulting.scpiinvapi.service.InvestmentService;
@@ -48,6 +49,13 @@ public class InvestmentResource {
         String userId = userService.getUserId();
         ScpiRepartitionDto distribution = investmentService.getPortfolioDistribution(userId);
         return ResponseEntity.ok(distribution);
+    }
+
+    @GetMapping("/monthly-revenue")
+    public ResponseEntity<MonthlyRevenueDTO> getMonthlyRevenue() {
+        String userId = userService.getUserId();
+        MonthlyRevenueDTO revenue = investmentService.calculateMonthlyRevenue(userId);
+        return ResponseEntity.ok(revenue);
     }
 
 }

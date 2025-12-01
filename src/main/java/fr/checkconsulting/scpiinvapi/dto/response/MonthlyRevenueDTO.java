@@ -12,9 +12,11 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class PortfolioSummaryDto {
-    private BigDecimal totalInvestedAmount;
-    private Integer totalInvestments;  
-    private BigDecimal totalMonthRevenu;                
-    private List<InvestmentResponseDto> investments; 
+public class MonthlyRevenueDTO {
+
+    private BigDecimal totalMonthlyRevenue;
+    private BigDecimal totalFutureMonthlyRevenue;
+    private List<ScpiRevenueDetailDTO> details;
+    private List<MonthlyRevenueHistoryDTO> history;
+
 }
