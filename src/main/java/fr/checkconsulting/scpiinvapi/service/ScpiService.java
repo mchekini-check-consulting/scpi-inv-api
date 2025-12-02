@@ -9,11 +9,13 @@ import fr.checkconsulting.scpiinvapi.model.entity.Scpi;
 import fr.checkconsulting.scpiinvapi.model.entity.ScpiPartValues;
 import fr.checkconsulting.scpiinvapi.repository.InvestmentRepository;
 import fr.checkconsulting.scpiinvapi.repository.ScpiRepository;
+import fr.checkconsulting.scpiinvapi.utils.LogEntry;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
@@ -41,6 +43,14 @@ public class ScpiService {
     }
 
     public ScpiDetailDto getScpiDetails(String name, String manager) {
+
+        log.info(LogEntry.builder().message(String.format("Demande d'info pour la SCPI : %s", name))
+                .loggerClass(this.getClass().getName())
+                .level("Info")
+                .application("api")
+                .thread(Thread.currentThread().getName())
+                .timestamp(LocalDateTime.now())
+                .build().toString());
 
         Scpi scpi = scpiRepository.findByName(name)
                 .orElseThrow(() -> new RuntimeException("Aucune SCPI trouvée avec le nom : " + name));

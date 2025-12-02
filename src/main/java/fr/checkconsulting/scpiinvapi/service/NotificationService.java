@@ -5,12 +5,14 @@ import fr.checkconsulting.scpiinvapi.dto.request.EmailNotificationRequest;
 import fr.checkconsulting.scpiinvapi.model.entity.Investment;
 import fr.checkconsulting.scpiinvapi.model.entity.Notification;
 import fr.checkconsulting.scpiinvapi.repository.NotificationRepository;
+import fr.checkconsulting.scpiinvapi.utils.LogEntry;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 @Service
 @Slf4j
@@ -47,7 +49,14 @@ public class NotificationService {
                     .investment(investment)
                     .build());
         } catch (Exception e) {
-            log.error("Erreur lors de l'envoi de l'email au service de notification", e);
+            log.error(LogEntry.builder().message("Erreur lors de l'envoi de l'email au service de notification")
+                    .loggerClass(this.getClass().getName())
+                    .level("Error")
+                    .application("api")
+                    .thread(Thread.currentThread().getName())
+                    .timestamp(LocalDateTime.now())
+                    .environment("int")
+                    .build().toString());
         }
     }
 
