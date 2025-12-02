@@ -1,0 +1,28 @@
+<configuration>
+
+    <statusListener class="ch.qos.logback.core.status.OnConsoleStatusListener"/>
+
+    <!-- CONSOLE JSON -->
+    <springProfile name="!local">
+    <appender name="JSON_CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder">
+            <providers>
+
+                <timestamp/>
+                <logLevel/>
+                <message/>
+                <loggerName/>
+                <threadName/>
+                <mdc/>
+
+            </providers>
+        </encoder>
+    </appender>
+
+    <root level="INFO">
+        <appender-ref ref="JSON_CONSOLE"/>
+    </root>
+
+    </springProfile>
+
+</configuration>
