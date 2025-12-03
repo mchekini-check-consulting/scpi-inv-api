@@ -1,6 +1,7 @@
 package fr.checkconsulting.scpiinvapi.dto.request;
 
 import fr.checkconsulting.scpiinvapi.model.enums.InvestmentType;
+import fr.checkconsulting.scpiinvapi.model.enums.PaymentType;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PositiveOrZero;
 import lombok.AllArgsConstructor;
@@ -9,6 +10,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 
 @Data
 @Builder
@@ -29,4 +31,12 @@ public class InvestmentRequestDTO {
 
     @PositiveOrZero
     Integer dismembermentYears;
+
+    @NotNull
+    PaymentType paymentType;
+
+    private LocalDate scheduledPaymentDate;
+
+    private BigDecimal monthlyAmount;
+
 }
