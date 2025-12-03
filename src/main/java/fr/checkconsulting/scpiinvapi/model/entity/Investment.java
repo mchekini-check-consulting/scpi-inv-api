@@ -1,6 +1,7 @@
 package fr.checkconsulting.scpiinvapi.model.entity;
 
 import fr.checkconsulting.scpiinvapi.model.enums.InvestmentType;
+import fr.checkconsulting.scpiinvapi.model.enums.PaymentType;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -8,6 +9,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -29,6 +31,11 @@ public class Investment {
     private InvestmentType investmentType;
     private Integer dismembermentYears;
     private LocalDateTime investmentDate;
+
+    @Enumerated(EnumType.STRING)
+    private PaymentType paymentType;
+    private LocalDate scheduledPaymentDate;
+    private BigDecimal monthlyAmount;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "scpi_id")

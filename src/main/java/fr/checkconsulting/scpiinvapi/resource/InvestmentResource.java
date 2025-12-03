@@ -33,7 +33,7 @@ public class InvestmentResource {
             @Valid @RequestBody InvestmentRequestDTO request) {
         String userId = this.userService.getUserId();
         investmentService.createInvestment(request, userId);
-        return ResponseEntity.status(HttpStatus.CREATED).build(); // ← 201 sans corps
+        return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
     @GetMapping("/my-portfolio")
@@ -70,7 +70,7 @@ public class InvestmentResource {
             @RequestParam(required = false) Long scpiId) {
         String userId = userService.getUserId();
 
-        
+
         int months = investmentService.calculateMonthsSinceFirstInvestment(userId);
 
         MonthlyRevenueDTO revenue = investmentService.calculateMonthlyRevenue(
@@ -80,5 +80,15 @@ public class InvestmentResource {
                 scpiId);
         return ResponseEntity.ok(revenue);
     }
+
+
+    @GetMapping("/hasinvested")
+    public ResponseEntity<Boolean> hasInvested(@RequestParam("scpiId") long scpiId) {
+        String userId = userService.getUserId();
+        boolean result = investmentService.hasInvested(userId, scpiId);
+        return ResponseEntity.ok(result);
+    }
+
+
 
 }
