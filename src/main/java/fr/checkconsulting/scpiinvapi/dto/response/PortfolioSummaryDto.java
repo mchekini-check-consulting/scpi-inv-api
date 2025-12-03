@@ -15,6 +15,7 @@ import lombok.NoArgsConstructor;
 public class PortfolioSummaryDto {
     private BigDecimal totalInvestedAmount;
     private Integer totalInvestments;  
-    private BigDecimal totalMonthRevenu;                
+    private BigDecimal totalMonthRevenu; 
+    private BigDecimal totalCumulRevenu;               
     private List<InvestmentResponseDto> investments; 
 }

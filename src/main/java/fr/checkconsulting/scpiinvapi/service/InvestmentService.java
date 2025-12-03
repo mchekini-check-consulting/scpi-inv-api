@@ -63,8 +63,6 @@ public class InvestmentService {
         this.notificationService = notificationService;
     }
 
-    // ========== CREATE INVESTMENT ==========
-    
     public void createInvestment(InvestmentRequestDTO request, String userId) {
         Scpi scpi = scpiRepository.findById(request.getScpiId())
                 .orElseThrow(() -> new IllegalArgumentException("SCPI non trouvée"));
@@ -103,7 +101,6 @@ public class InvestmentService {
         notificationService.sendEmailNotification(userService.getEmail(), investment);
     }
 
-    
     public PortfolioSummaryDto getInvestorPortfolio(String userId, String sortBy) {
         List<Investment> investments;
         if ("amount".equalsIgnoreCase(sortBy)) {
@@ -119,44 +116,41 @@ public class InvestmentService {
 
         BigDecimal totalMonthRevenu = calculateTotalMonthlyRevenue(investments);
 
+        BigDecimal totalCumulRevenu = calculateTotalCumulativeRevenue(investments);
+
         List<InvestmentResponseDto> investmentDTOs = investmentMapper.toResponseDTOList(investments);
 
         return PortfolioSummaryDto.builder()
                 .totalInvestedAmount(totalAmount)
                 .totalInvestments(investments.size())
                 .totalMonthRevenu(totalMonthRevenu)
+                .totalCumulRevenu(totalCumulRevenu)
                 .investments(investmentDTOs)
                 .build();
     }
 
     private BigDecimal calculateTotalMonthlyRevenue(List<Investment> investments) {
-    BigDecimal totalRevenue = BigDecimal.ZERO;
-    
-    for (Investment investment : investments) {
-        
-        BigDecimal rate = getLatestDistributionRate(investment.getScpi());
-        
-        if (rate == null) {
-            rate = BigDecimal.ZERO;
+        BigDecimal totalRevenue = BigDecimal.ZERO;
+
+        for (Investment investment : investments) {
+            BigDecimal rate = getLatestDistributionRate(investment.getScpi());
+
+            if (rate == null) {
+                rate = BigDecimal.ZERO;
+            }
+
+            BigDecimal monthlyRevenue = calculateMonthlyRevenueForInvestment(
+                    investment.getInvestmentAmount(),
+                    rate);
+
+            if (investment.getInvestmentType() != InvestmentType.BARE_OWNERSHIP) {
+                totalRevenue = totalRevenue.add(monthlyRevenue);
+            }
         }
-        
-      
-        BigDecimal monthlyRevenue = calculateMonthlyRevenueForInvestment(
-            investment.getInvestmentAmount(),
-            rate
-        );
-        
-        
-        if (investment.getInvestmentType() != InvestmentType.BARE_OWNERSHIP) {
-            totalRevenue = totalRevenue.add(monthlyRevenue);
-        }
+
+        return totalRevenue;
     }
-    
-    return totalRevenue;
-}
 
-
-    
     public ScpiRepartitionDto getPortfolioDistribution(String userId) {
         List<Investment> investments = investmentRepository
                 .findByInvestorUserIdOrderByInvestmentDateDesc(userId);
@@ -225,113 +219,157 @@ public class InvestmentService {
                 .collect(Collectors.toList());
     }
 
-    
-    public MonthlyRevenueDTO calculateMonthlyRevenue(String userId) {
+    public MonthlyRevenueDTO calculateMonthlyRevenue(
+            String userId,
+            int months,
+            Integer year,
+            Long scpiId) {
+
         List<Investment> investments = investmentRepository
                 .findByInvestorUserIdOrderByInvestmentDateDesc(userId);
-        
+
+        if (scpiId != null) {
+            investments = investments.stream()
+                    .filter(inv -> inv.getScpi().getId().equals(scpiId))
+                    .collect(Collectors.toList());
+        }
+
         BigDecimal totalCurrentRevenue = BigDecimal.ZERO;
         BigDecimal totalFutureRevenue = BigDecimal.ZERO;
         List<ScpiRevenueDetailDTO> details = new ArrayList<>();
-        
+
         for (Investment investment : investments) {
             Scpi scpi = investment.getScpi();
-            
+
             BigDecimal distributionRate = getLatestDistributionRate(scpi);
-            
+
             if (distributionRate == null) {
                 distributionRate = BigDecimal.ZERO;
             }
-            
+
             BigDecimal monthlyRevenue = calculateMonthlyRevenueForInvestment(
-                investment.getInvestmentAmount(),
-                distributionRate
-            );
-            
+                    investment.getInvestmentAmount(),
+                    distributionRate);
+
             if (investment.getInvestmentType() == InvestmentType.BARE_OWNERSHIP) {
                 totalFutureRevenue = totalFutureRevenue.add(monthlyRevenue);
             } else {
                 totalCurrentRevenue = totalCurrentRevenue.add(monthlyRevenue);
             }
-            
+
             details.add(ScpiRevenueDetailDTO.builder()
-                .scpiName(scpi.getName())
-                .monthlyRevenue(monthlyRevenue)
-                .investmentAmount(investment.getInvestmentAmount())
-                .distributionRate(distributionRate)
-                .investmentType(investment.getInvestmentType())
-                .build());
+                    .scpiId(scpi.getId())
+                    .scpiName(scpi.getName())
+                    .monthlyRevenue(monthlyRevenue)
+                    .investmentAmount(investment.getInvestmentAmount())
+                    .distributionRate(distributionRate)
+                    .investmentType(investment.getInvestmentType())
+                    .build());
         }
 
-        List<MonthlyRevenueHistoryDTO> history = calculateRevenueHistory(userId, 6);
-        
+         BigDecimal totalCumulRevenue = calculateTotalCumulativeRevenue(investments);
+
+        List<MonthlyRevenueHistoryDTO> history = calculateRevenueHistory(
+                userId,
+                months,
+                year,
+                scpiId);
+
         return MonthlyRevenueDTO.builder()
-            .totalMonthlyRevenue(totalCurrentRevenue)
-            .totalFutureMonthlyRevenue(totalFutureRevenue)
-            .details(details)
-            .history(history)
-            .build();
+                .totalMonthlyRevenue(totalCurrentRevenue)
+                .totalFutureMonthlyRevenue(totalFutureRevenue)
+                .totalCumulRevenue(totalCumulRevenue)
+                .details(details)
+                .history(history)
+                .build();
     }
 
  
-    private List<MonthlyRevenueHistoryDTO> calculateRevenueHistory(String userId, int months) {
-      
+    public int calculateMonthsSinceFirstInvestment(String userId) {
+        List<Investment> investments = investmentRepository
+                .findByInvestorUserIdOrderByInvestmentDateAsc(userId);
+
+        if (investments.isEmpty()) {
+            return 6; 
+        }
+
+        
+        LocalDate firstInvestmentDate = investments.get(0).getInvestmentDate().toLocalDate();
+        LocalDate today = LocalDate.now();
+
+    
+        long monthsSinceFirst = java.time.temporal.ChronoUnit.MONTHS.between(firstInvestmentDate, today);
+
+        
+        return (int) monthsSinceFirst + 1;
+    }
+
+    private List<MonthlyRevenueHistoryDTO> calculateRevenueHistory(
+            String userId,
+            int months,
+            Integer year,
+            Long scpiId) {
+
         List<Investment> allInvestments = investmentRepository
                 .findByInvestorUserIdOrderByInvestmentDateAsc(userId);
-        
+
+        if (scpiId != null) {
+            allInvestments = allInvestments.stream()
+                    .filter(inv -> inv.getScpi().getId().equals(scpiId))
+                    .collect(Collectors.toList());
+        }
+
         List<MonthlyRevenueHistoryDTO> history = new ArrayList<>();
         LocalDate today = LocalDate.now();
-        
-     
+
         for (int i = months - 1; i >= 0; i--) {
             LocalDate targetMonth = today.minusMonths(i);
-            
-          
+
+            // ✅ Filtrer par année si demandé
+            if (year != null && targetMonth.getYear() != year) {
+                continue; // Ignorer ce mois s'il n'est pas dans l'année demandée
+            }
+
             List<Investment> activeInvestments = allInvestments.stream()
                     .filter(inv -> {
                         LocalDate investmentDate = inv.getInvestmentDate().toLocalDate();
                         return !investmentDate.isAfter(targetMonth);
                     })
                     .collect(Collectors.toList());
-            
-      
+
             BigDecimal monthlyRevenue = BigDecimal.ZERO;
-            
+
             for (Investment investment : activeInvestments) {
                 BigDecimal rate = getLatestDistributionRate(investment.getScpi());
-                
+
                 if (rate == null) {
                     rate = BigDecimal.ZERO;
                 }
-                
+
                 BigDecimal revenue = calculateMonthlyRevenueForInvestment(
-                    investment.getInvestmentAmount(),
-                    rate
-                );
-                
-                
+                        investment.getInvestmentAmount(),
+                        rate);
+
                 if (investment.getInvestmentType() != InvestmentType.BARE_OWNERSHIP) {
                     monthlyRevenue = monthlyRevenue.add(revenue);
                 }
             }
-            
-            
+
             history.add(MonthlyRevenueHistoryDTO.builder()
-                .year(targetMonth.getYear())
-                .month(targetMonth.getMonthValue())
-                .revenue(monthlyRevenue)
-                .build());
+                    .year(targetMonth.getYear())
+                    .month(targetMonth.getMonthValue())
+                    .revenue(monthlyRevenue)
+                    .build());
         }
-        
+
         return history;
     }
-
 
     private BigDecimal getLatestDistributionRate(Scpi scpi) {
         if (scpi.getDistributionRates() == null || scpi.getDistributionRates().isEmpty()) {
             return BigDecimal.ZERO;
         }
-        
+
         return scpi.getDistributionRates().stream()
                 .max(java.util.Comparator.comparing(DistributionRate::getDistributionYear))
                 .map(DistributionRate::getRate)
@@ -339,16 +377,49 @@ public class InvestmentService {
     }
 
     private BigDecimal calculateMonthlyRevenueForInvestment(
-        BigDecimal investmentAmount,
-        BigDecimal distributionRate
-    ) {
+            BigDecimal investmentAmount,
+            BigDecimal distributionRate) {
         if (investmentAmount == null || distributionRate == null) {
             return BigDecimal.ZERO;
         }
-        
+
         return investmentAmount
                 .multiply(distributionRate)
                 .divide(BigDecimal.valueOf(100), 4, RoundingMode.HALF_UP)
                 .divide(BigDecimal.valueOf(12), 2, RoundingMode.HALF_UP);
+    }
+
+    private BigDecimal calculateTotalCumulativeRevenue(List<Investment> investments) {
+        BigDecimal totalCumul = BigDecimal.ZERO;
+
+        for (Investment investment : investments) {
+
+            BigDecimal rate = getLatestDistributionRate(investment.getScpi());
+
+            if (rate == null) {
+                rate = BigDecimal.ZERO;
+            }
+
+            LocalDate investmentDate = investment.getInvestmentDate().toLocalDate();
+            LocalDate today = LocalDate.now();
+            long monthsHeld = java.time.temporal.ChronoUnit.MONTHS.between(investmentDate, today);
+
+            if (monthsHeld == 0) {
+                monthsHeld = 1;
+            }
+
+            BigDecimal monthlyRevenue = calculateMonthlyRevenueForInvestment(
+                    investment.getInvestmentAmount(),
+                    rate);
+
+            BigDecimal cumulForInvestment = monthlyRevenue
+                    .multiply(BigDecimal.valueOf(monthsHeld));
+
+            if (investment.getInvestmentType() != InvestmentType.BARE_OWNERSHIP) {
+                totalCumul = totalCumul.add(cumulForInvestment);
+            }
+        }
+
+        return totalCumul;
     }
 }

@@ -16,6 +16,7 @@ public class MonthlyRevenueDTO {
 
     private BigDecimal totalMonthlyRevenue;
     private BigDecimal totalFutureMonthlyRevenue;
+    private BigDecimal totalCumulRevenue;
     private List<ScpiRevenueDetailDTO> details;
     private List<MonthlyRevenueHistoryDTO> history;
 

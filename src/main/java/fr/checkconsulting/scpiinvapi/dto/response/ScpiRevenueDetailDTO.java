@@ -13,6 +13,7 @@ import java.math.BigDecimal;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ScpiRevenueDetailDTO {
+    private Long scpiId;
     private String scpiName;                    
     private BigDecimal monthlyRevenue;        
     private BigDecimal investmentAmount;        
