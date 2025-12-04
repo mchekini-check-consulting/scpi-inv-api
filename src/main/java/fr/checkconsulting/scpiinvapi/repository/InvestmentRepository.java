@@ -15,6 +15,8 @@ public interface InvestmentRepository extends JpaRepository<Investment, Long> {
     List<Investment> findByInvestorUserIdAndScpiId(String userId, Long scpiId);
 
     List<Investment> findByInvestorUserIdOrderByInvestmentDateDesc(String userId);
+
+    List<Investment> findByInvestorUserIdOrderByInvestmentDateAsc(String userId);
     
     List<Investment> findByInvestorUserIdOrderByInvestmentAmountDesc(String userId);
 

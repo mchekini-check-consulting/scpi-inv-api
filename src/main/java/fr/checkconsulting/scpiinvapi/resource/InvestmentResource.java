@@ -1,6 +1,7 @@
 package fr.checkconsulting.scpiinvapi.resource;
 
 import fr.checkconsulting.scpiinvapi.dto.request.InvestmentRequestDTO;
+import fr.checkconsulting.scpiinvapi.dto.response.MonthlyRevenueDTO;
 import fr.checkconsulting.scpiinvapi.dto.response.PortfolioSummaryDto;
 import fr.checkconsulting.scpiinvapi.dto.response.ScpiRepartitionDto;
 import fr.checkconsulting.scpiinvapi.service.InvestmentService;
@@ -48,6 +49,36 @@ public class InvestmentResource {
         String userId = userService.getUserId();
         ScpiRepartitionDto distribution = investmentService.getPortfolioDistribution(userId);
         return ResponseEntity.ok(distribution);
+    }
+
+    @GetMapping("/monthly-revenue")
+    public ResponseEntity<MonthlyRevenueDTO> getMonthlyRevenue(
+            @RequestParam(defaultValue = "6") Integer months,
+            @RequestParam(required = false) Integer year,
+            @RequestParam(required = false) Long scpiId) {
+
+        String userId = userService.getUserId();
+        MonthlyRevenueDTO revenue = investmentService.calculateMonthlyRevenue(userId, months,
+                year,
+                scpiId);
+        return ResponseEntity.ok(revenue);
+    }
+
+    @GetMapping("/monthly-revenue/full-history")
+    public ResponseEntity<MonthlyRevenueDTO> getFullMonthlyRevenueHistory(
+            @RequestParam(required = false) Integer year,
+            @RequestParam(required = false) Long scpiId) {
+        String userId = userService.getUserId();
+
+        
+        int months = investmentService.calculateMonthsSinceFirstInvestment(userId);
+
+        MonthlyRevenueDTO revenue = investmentService.calculateMonthlyRevenue(
+                userId,
+                months,
+                year,
+                scpiId);
+        return ResponseEntity.ok(revenue);
     }
 
 }
