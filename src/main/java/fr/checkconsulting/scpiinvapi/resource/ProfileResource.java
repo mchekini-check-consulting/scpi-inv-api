@@ -1,6 +1,7 @@
 package fr.checkconsulting.scpiinvapi.resource;
 
 import fr.checkconsulting.scpiinvapi.dto.request.ProfileRequest;
+import fr.checkconsulting.scpiinvapi.dto.response.ProfileDtoResponse;
 import fr.checkconsulting.scpiinvapi.model.entity.Profile;
 import fr.checkconsulting.scpiinvapi.model.enums.MaritalStatus;
 import fr.checkconsulting.scpiinvapi.service.ProfileService;
@@ -19,16 +20,10 @@ public class ProfileResource {
     }
 
     @PostMapping
-    public ResponseEntity<Profile> create(@Valid @RequestBody ProfileRequest req) {
-        boolean hasConjoint = req.getStatus() == MaritalStatus.MARIE || req.getStatus() == MaritalStatus.PACSE;
 
-        Profile p = new Profile();
-        p.setStatus(req.getStatus());
-        p.setChildren(req.getChildren());
-        p.setIncomeInvestor(req.getIncomeInvestor());
-        p.setIncomeConjoint(hasConjoint ? req.getIncomeConjoint() : null);
+    public ResponseEntity<ProfileDtoResponse> create(@Valid @RequestBody ProfileRequest req) {
+        ProfileDtoResponse response = service.createProfile(req);
+        return ResponseEntity.ok(response);
 
-        Profile saved = service.save(p);
-        return ResponseEntity.ok(saved);
     }
 }
