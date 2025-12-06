@@ -12,9 +12,10 @@ import org.thymeleaf.context.Context;
 
 import java.time.LocalDateTime;
 
-@Service
 @Slf4j
+@Service
 public class NotificationService {
+
     private final NotificationRepository repository;
     private final ScpiInvNotificationClient notificationClient;
     private final TemplateEngine templateEngine;
@@ -28,27 +29,41 @@ public class NotificationService {
     }
 
     public void sendEmailNotification(String recipient, Investment investment) {
-        String emailContent = generateEmailContent(investment);
+        log.info("Préparation de l'envoi d'une notification email à {} pour investissement id={}", recipient, investment.getId());
 
-        EmailNotificationRequest emailRequest = EmailNotificationRequest.builder()
+        String emailContent = generateEmailContent(investment);
+        EmailNotificationRequest emailRequest = buildEmailRequest(recipient, emailContent);
+
+        try {
+            notificationClient.sendEmailNotification(emailRequest);
+            log.info("Email envoyé avec succès à {}", recipient);
+
+            saveNotification(recipient, investment);
+        } catch (Exception e) {
+            log.error("Erreur lors de l'envoi de l'email au service de notification pour recipient={}", recipient, e);
+        }
+    }
+
+    private EmailNotificationRequest buildEmailRequest(String recipient, String emailContent) {
+        return EmailNotificationRequest.builder()
                 .to(recipient)
                 .subject("Confirmation de votre demande d'investissement")
                 .body(emailContent)
                 .bodyType("HTML")
                 .from("me.chekini@gmail.com")
                 .build();
+    }
 
-        try {
-            notificationClient.sendEmailNotification(emailRequest);
-            repository.save(Notification.builder()
-                    .recipient(recipient)
-                    .date(LocalDateTime.now())
-                    .type("EMAIL")
-                    .investment(investment)
-                    .build());
-        } catch (Exception e) {
-            log.error("Erreur lors de l'envoi de l'email au service de notification", e);
-        }
+    private void saveNotification(String recipient, Investment investment) {
+        Notification notification = Notification.builder()
+                .recipient(recipient)
+                .date(LocalDateTime.now())
+                .type("EMAIL")
+                .investment(investment)
+                .build();
+
+        repository.save(notification);
+        log.debug("Notification persistée en base pour recipient={} et investment id={}", recipient, investment.getId());
     }
 
     private String generateEmailContent(Investment investment) {
@@ -63,6 +78,7 @@ public class NotificationService {
         context.setVariable("investment_type", investmentType);
         context.setVariable("dismemberment", investment.getDismembermentYears());
 
+        log.debug("Contenu email généré pour SCPI={} type={} montant={}", scpiName, investmentType, investment.getInvestmentAmount());
         return templateEngine.process("email/investment-confirmation", context);
     }
 
