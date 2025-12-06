@@ -50,4 +50,6 @@ public class Scpi {
 
     @OneToMany(mappedBy = "scpi", cascade = CascadeType.ALL,orphanRemoval = true)
     private List<DismembermentDiscounts> dismembermentDiscounts;
+
+
 }

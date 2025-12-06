@@ -75,4 +75,10 @@ public class ScpiResource {
     public List<ScpiSimulatorDTOResponse> getScpiSimulatorData() {
         return scpiService.getScpiForSimulator();
     }
+
+    @GetMapping("/scpiScheduledPayment")
+    public ResponseEntity<List<ScpiSummaryDto>> getScpiScheduledPayment() {
+        return ResponseEntity.ok(scpiService.getScpiShedultPayment());
+    }
+
 }

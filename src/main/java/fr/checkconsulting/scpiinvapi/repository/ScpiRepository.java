@@ -13,4 +13,6 @@ public interface ScpiRepository extends JpaRepository<Scpi, Long> {
     Optional<Scpi> findByName(String name);
 
     List<Scpi> findByDismembermentIsFalse();
+
+    List<Scpi> findByScheduledPaymentTrue();
 }
