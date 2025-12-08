@@ -116,4 +116,11 @@ public class ScpiService {
                    .reversed())
            .toList();
  }
+
+    public List<ScpiSummaryDto> getScpiShedultPayment(){
+        return scpiRepository.findByScheduledPaymentTrue()
+                .stream()
+                .map(scpiMapper::toScpiSummaryDto)
+                .toList();
+    }
 }

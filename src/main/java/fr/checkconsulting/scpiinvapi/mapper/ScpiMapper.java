@@ -25,6 +25,7 @@ public interface ScpiMapper {
 
     @Mapping(target = "distributionRate", source = "source", qualifiedByName = "extractRate")
     @Mapping(target = "country", source = "source", qualifiedByName = "extractCountry")
+    @Mapping(target = "sharePrice", source = "source", qualifiedByName = "extractLatestSharePrice")
     ScpiSummaryDto toScpiSummaryDto(Scpi source);
 
     List<ScpiSummaryDto> toScpiSummaryDto(List<Scpi> source);

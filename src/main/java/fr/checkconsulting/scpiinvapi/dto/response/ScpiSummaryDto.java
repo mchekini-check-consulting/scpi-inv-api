@@ -24,6 +24,8 @@ public class ScpiSummaryDto {
     
     private BigDecimal distributionRate;
     private String country;
+    private BigDecimal sharePrice;
+
     
     
 }

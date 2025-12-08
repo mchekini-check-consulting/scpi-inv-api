@@ -26,4 +26,7 @@ public interface InvestmentRepository extends JpaRepository<Investment, Long> {
 
     @Query("SELECT COUNT(DISTINCT i.scpi.id) FROM Investment i WHERE i.investor.userId = :userId")
     Long countDistinctScpisByInvestorUserId(@Param("userId") String userId);
+
+    boolean existsByInvestorUserIdAndScpiId(String userId, Long scpiId);
+
 }
