@@ -150,4 +150,12 @@ public class ScpiService {
                     return new IllegalStateException("Aucun taux de distribution trouvé");
                 });
     }
+
+    public List<ScpiSummaryDto> getScpiShedultPayment(){
+        log.info("Récupération des versements programmés");
+        return scpiRepository.findByScheduledPaymentTrue()
+                .stream()
+                .map(scpiMapper::toScpiSummaryDto)
+                .toList();
+    }
 }

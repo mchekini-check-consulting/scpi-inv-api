@@ -87,6 +87,10 @@ public class InvestmentService {
         investment.setInvestmentAmount(request.getInvestmentAmount());
         investment.setDismembermentYears(request.getDismembermentYears());
         investment.setInvestmentDate(LocalDateTime.now());
+        investment.setPaymentType(request.getPaymentType());
+        investment.setScheduledPaymentDate(request.getScheduledPaymentDate());
+        investment.setMonthlyAmount(request.getMonthlyAmount());
+
 
         Investment saved = investmentRepository.save(investment);
 
@@ -284,23 +288,23 @@ public class InvestmentService {
                 .build();
     }
 
- 
+
     public int calculateMonthsSinceFirstInvestment(String userId) {
         List<Investment> investments = investmentRepository
                 .findByInvestorUserIdOrderByInvestmentDateAsc(userId);
 
         if (investments.isEmpty()) {
-            return 6; 
+            return 6;
         }
 
-        
+
         LocalDate firstInvestmentDate = investments.get(0).getInvestmentDate().toLocalDate();
         LocalDate today = LocalDate.now();
 
-    
+
         long monthsSinceFirst = java.time.temporal.ChronoUnit.MONTHS.between(firstInvestmentDate, today);
 
-        
+
         return (int) monthsSinceFirst + 1;
     }
 
@@ -422,4 +426,7 @@ public class InvestmentService {
 
         return totalCumul;
     }
-}
+
+    public boolean hasInvested(String userId, Long scpiId) {
+        return investmentRepository.existsByInvestorUserIdAndScpiId(userId, scpiId);
+    } }
