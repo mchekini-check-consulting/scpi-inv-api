@@ -13,6 +13,7 @@ import fr.checkconsulting.scpiinvapi.model.entity.DistributionRate;
 import fr.checkconsulting.scpiinvapi.model.entity.History;
 import fr.checkconsulting.scpiinvapi.model.entity.Investment;
 import fr.checkconsulting.scpiinvapi.model.entity.Investor;
+import fr.checkconsulting.scpiinvapi.model.entity.Location;
 import fr.checkconsulting.scpiinvapi.model.entity.Scpi;
 import fr.checkconsulting.scpiinvapi.model.entity.Sector;
 import fr.checkconsulting.scpiinvapi.model.enums.InvestmentStatus;
@@ -90,7 +91,6 @@ public class InvestmentService {
         investment.setPaymentType(request.getPaymentType());
         investment.setScheduledPaymentDate(request.getScheduledPaymentDate());
         investment.setMonthlyAmount(request.getMonthlyAmount());
-
 
         Investment saved = investmentRepository.save(investment);
 
@@ -172,7 +172,8 @@ public class InvestmentService {
         }
 
         List<RepartitionItemDto> sectoralDistribution = calculateSectoralDistribution(investments, totalInvestedAmount);
-        List<RepartitionItemDto> geographicalDistribution = List.of();
+        List<RepartitionItemDto> geographicalDistribution = calculateGeographicalDistribution(investments,
+                totalInvestedAmount);
 
         return ScpiRepartitionDto.builder()
                 .totalInvestedAmount(totalInvestedAmount)
@@ -217,6 +218,49 @@ public class InvestmentService {
                     return RepartitionItemDto.builder()
                             .label(sectorName)
                             .percentage(percentage)
+                            .build();
+                })
+                .sorted((r1, r2) -> r2.getPercentage().compareTo(r1.getPercentage()))
+                .collect(Collectors.toList());
+    }
+
+    private List<RepartitionItemDto> calculateGeographicalDistribution(
+            List<Investment> investments,
+            BigDecimal totalInvestedAmount) {
+
+        Map<String, BigDecimal> countryAmounts = new HashMap<>();
+
+        for (Investment investment : investments) {
+            Scpi scpi = investment.getScpi();
+
+            if (scpi.getLocations() == null || scpi.getLocations().isEmpty()) {
+                continue;
+            }
+
+            for (Location country : scpi.getLocations()) {
+                String countryName = country.getCountry();
+
+                BigDecimal countryContribution = investment.getInvestmentAmount()
+                        .multiply(country.getPercentage())
+                        .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
+
+                countryAmounts.merge(countryName, countryContribution, BigDecimal::add);
+            }
+        }
+
+        return countryAmounts.entrySet().stream()
+                .map(entry -> {
+                    String countryName = entry.getKey();
+                    BigDecimal countryAmount = entry.getValue();
+
+                    BigDecimal percentage = countryAmount
+                            .multiply(BigDecimal.valueOf(100))
+                            .divide(totalInvestedAmount, 2, RoundingMode.HALF_UP);
+
+                    return RepartitionItemDto.builder()
+                            .label(countryName)
+                            .percentage(percentage)
+                            .amount(countryAmount) // ✅ AJOUTE LE MONTANT
                             .build();
                 })
                 .sorted((r1, r2) -> r2.getPercentage().compareTo(r1.getPercentage()))
@@ -271,7 +315,7 @@ public class InvestmentService {
                     .build());
         }
 
-         BigDecimal totalCumulRevenue = calculateTotalCumulativeRevenue(investments);
+        BigDecimal totalCumulRevenue = calculateTotalCumulativeRevenue(investments);
 
         List<MonthlyRevenueHistoryDTO> history = calculateRevenueHistory(
                 userId,
@@ -288,7 +332,6 @@ public class InvestmentService {
                 .build();
     }
 
-
     public int calculateMonthsSinceFirstInvestment(String userId) {
         List<Investment> investments = investmentRepository
                 .findByInvestorUserIdOrderByInvestmentDateAsc(userId);
@@ -297,13 +340,10 @@ public class InvestmentService {
             return 6;
         }
 
-
         LocalDate firstInvestmentDate = investments.get(0).getInvestmentDate().toLocalDate();
         LocalDate today = LocalDate.now();
 
-
         long monthsSinceFirst = java.time.temporal.ChronoUnit.MONTHS.between(firstInvestmentDate, today);
-
 
         return (int) monthsSinceFirst + 1;
     }
@@ -429,4 +469,5 @@ public class InvestmentService {
 
     public boolean hasInvested(String userId, Long scpiId) {
         return investmentRepository.existsByInvestorUserIdAndScpiId(userId, scpiId);
-    } }
+    }
+}

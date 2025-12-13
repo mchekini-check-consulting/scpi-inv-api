@@ -14,4 +14,5 @@ import java.math.BigDecimal;
 public class RepartitionItemDto {
     private String label;
     private BigDecimal percentage;
+    private BigDecimal amount;
 }
