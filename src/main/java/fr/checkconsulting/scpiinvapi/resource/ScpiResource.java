@@ -1,5 +1,6 @@
 package fr.checkconsulting.scpiinvapi.resource;
 
+import fr.checkconsulting.scpiinvapi.dto.request.ScpiSearchCriteriaDto;
 import fr.checkconsulting.scpiinvapi.dto.response.*;
 import fr.checkconsulting.scpiinvapi.service.ScpiService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -8,11 +9,9 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -27,11 +26,29 @@ public class ScpiResource {
         this.scpiService = scpiService;
     }
 
-    @GetMapping
-    public ResponseEntity<List<ScpiSummaryDto>> getAllScpi() {
+    @GetMapping("/filters-options")
+    public ResponseEntity<ScpiFiltersOptionsDto> getScpiFiltersOptions() {
+        return ResponseEntity.ok(scpiService.getScpiFiltersOptions());
+    }
 
-        List<ScpiSummaryDto> scpiList = scpiService.getAllScpi();
-        return ResponseEntity.ok(scpiList);
+    @GetMapping
+    public ResponseEntity<Page<ScpiSummaryDto>> searchScpi(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(required = false) String name,
+            @RequestParam(required = false) String type,
+            @RequestParam(required = false) Integer minimumSubscription,
+            @RequestParam(required = false) Double yield,
+            @RequestParam(required = false) List<String> countries,
+            @RequestParam(required = false) List<String> sectors,
+            @RequestParam(required = false) List<String> rentFrequencies) {
+
+        ScpiSearchCriteriaDto criteria = new ScpiSearchCriteriaDto(
+                name, type, minimumSubscription, yield, countries, sectors, rentFrequencies
+        );
+
+        Page<ScpiSummaryDto> scpiPage = scpiService.searchScpi(criteria, page, size);
+        return ResponseEntity.ok(scpiPage);
     }
 
     @GetMapping("/{id}")
@@ -126,7 +143,6 @@ public class ScpiResource {
     public List<ScpiSimulatorResponseDto> getScpiSimulatorData() {
         return scpiService.getScpiForSimulator();
     }
-
 
     @GetMapping("/scpiScheduledPayment")
     public ResponseEntity<List<ScpiSummaryDto>> getScpiScheduledPayment() {
