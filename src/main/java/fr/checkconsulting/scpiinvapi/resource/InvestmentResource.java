@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/investment")
+@RequestMapping("/api/v1/investment")
 public class InvestmentResource {
 
     private final InvestmentService investmentService;
@@ -31,23 +31,21 @@ public class InvestmentResource {
     @PostMapping
     public ResponseEntity<Void> create(
             @Valid @RequestBody InvestmentRequestDTO request) {
-        String userId = this.userService.getUserId();
-        investmentService.createInvestment(request, userId);
+
+        investmentService.createInvestment(request);
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
     @GetMapping("/my-portfolio")
     public ResponseEntity<PortfolioSummaryDto> getMyPortfolio(
             @RequestParam(defaultValue = "date") String sortBy) {
-        String userId = userService.getUserId();
-        PortfolioSummaryDto portfolio = investmentService.getInvestorPortfolio(userId, sortBy);
+        PortfolioSummaryDto portfolio = investmentService.getInvestorPortfolio(sortBy);
         return ResponseEntity.ok(portfolio);
     }
 
     @GetMapping("/portfolio-distribution")
     public ResponseEntity<ScpiRepartitionDto> getPortfolioDistribution() {
-        String userId = userService.getUserId();
-        ScpiRepartitionDto distribution = investmentService.getPortfolioDistribution(userId);
+        ScpiRepartitionDto distribution = investmentService.getPortfolioDistribution();
         return ResponseEntity.ok(distribution);
     }
 
@@ -57,10 +55,8 @@ public class InvestmentResource {
             @RequestParam(required = false) Integer year,
             @RequestParam(required = false) Long scpiId) {
 
-        String userId = userService.getUserId();
-        MonthlyRevenueDTO revenue = investmentService.calculateMonthlyRevenue(userId, months,
-                year,
-                scpiId);
+
+        MonthlyRevenueDTO revenue = investmentService.calculateMonthlyRevenue(months, year, scpiId);
         return ResponseEntity.ok(revenue);
     }
 
@@ -71,10 +67,9 @@ public class InvestmentResource {
         String userId = userService.getUserId();
 
 
-        int months = investmentService.calculateMonthsSinceFirstInvestment(userId);
+        int months = investmentService.calculateMonthsSinceFirstInvestment();
 
         MonthlyRevenueDTO revenue = investmentService.calculateMonthlyRevenue(
-                userId,
                 months,
                 year,
                 scpiId);

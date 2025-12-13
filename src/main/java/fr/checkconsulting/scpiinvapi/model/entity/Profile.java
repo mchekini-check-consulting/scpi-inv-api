@@ -27,6 +27,7 @@ public class Profile {
     private Integer children;
     private BigDecimal incomeInvestor;
     private BigDecimal incomeConjoint;
+    private String email;
 
 
 }

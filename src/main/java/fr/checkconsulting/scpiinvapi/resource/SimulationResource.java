@@ -34,8 +34,7 @@ public class SimulationResource {
     public ResponseEntity<SimulationResponseDTO> saveSimulation(
             @RequestBody SimulationSaveRequestDto request
     ) {
-        SimulationResponseDTO simulationDto = simulationService.saveSimulation(request);
-        return ResponseEntity.ok(simulationDto);
+        return ResponseEntity.ok(simulationService.saveSimulation(request));
     }
 
 
@@ -45,8 +44,8 @@ public class SimulationResource {
             description = "Retourne toutes les simulations associées à l'utilisateur connecté"
     )
     public ResponseEntity<List<Simulation>> getAllSimulations() {
-        String userId = userService.getUserId();
-        List<Simulation> simulations = simulationRepository.findAllByUserId(userId);
+        String userId = userService.getEmail();
+        List<Simulation> simulations = simulationRepository.findAllByUserEmail(userId);
         return ResponseEntity.ok(simulations);
     }
 
@@ -56,8 +55,8 @@ public class SimulationResource {
             description = "Supprime une simulation du user avec tous ses liens SCPI"
     )
     public ResponseEntity<Void> deleteSimulation(@PathVariable Long id) {
-        String userId = userService.getUserId();
-        Simulation simulation = simulationRepository.findByIdAndUserId(id, userId)
+        String userId = userService.getEmail();
+        Simulation simulation = simulationRepository.findByIdAndUserEmail(id, userId)
                 .orElseThrow(() -> new EntityNotFoundException("Simulation introuvable"));
 
         simulationRepository.delete(simulation);

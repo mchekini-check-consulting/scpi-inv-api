@@ -82,8 +82,8 @@ public class ScpiService {
                     return new IllegalArgumentException("SCPI non trouvée avec l'id: " + id);
                 });
 
-        String userId = userService.getUserId();
-        List<Investment> investments = investmentRepository.findByInvestorUserIdAndScpiId(userId, id);
+        String userId = userService.getEmail();
+        List<Investment> investments = investmentRepository.findByUserEmailAndScpiId(userId, id);
 
         BigDecimal totalInvestedAmount = investments.stream()
                 .map(Investment::getInvestmentAmount)

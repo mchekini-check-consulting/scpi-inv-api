@@ -12,21 +12,18 @@ import java.util.List;
 @Repository
 public interface InvestmentRepository extends JpaRepository<Investment, Long> {
     
-    List<Investment> findByInvestorUserIdAndScpiId(String userId, Long scpiId);
+    List<Investment> findByUserEmailAndScpiId(String userId, Long scpiId);
 
-    List<Investment> findByInvestorUserIdOrderByInvestmentDateDesc(String userId);
+    List<Investment> findByUserEmailOrderByInvestmentDateDesc(String userId);
 
-    List<Investment> findByInvestorUserIdOrderByInvestmentDateAsc(String userId);
+    List<Investment> findByUserEmailOrderByInvestmentDateAsc(String userId);
     
-    List<Investment> findByInvestorUserIdOrderByInvestmentAmountDesc(String userId);
+    List<Investment> findByUserEmailOrderByInvestmentAmountDesc(String userId);
 
-    @Query("SELECT SUM(i.investmentAmount) FROM Investment i WHERE i.investor.userId = :userId")
-    BigDecimal calculateTotalInvestedAmount(@Param("userId") String userId);
-    
+    @Query("SELECT SUM(i.investmentAmount) FROM Investment i WHERE i.userEmail = :userEmail")
+    BigDecimal calculateTotalInvestedAmount(@Param("userEmail") String userEmail);
 
-    @Query("SELECT COUNT(DISTINCT i.scpi.id) FROM Investment i WHERE i.investor.userId = :userId")
-    Long countDistinctScpisByInvestorUserId(@Param("userId") String userId);
 
-    boolean existsByInvestorUserIdAndScpiId(String userId, Long scpiId);
+    boolean existsByUserEmailAndScpiId(String userEmail, Long scpiId);
 
 }

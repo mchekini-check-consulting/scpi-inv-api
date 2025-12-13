@@ -22,9 +22,9 @@ public class HistoryService {
     }
 
     public List<HistoryDto> getHistory() {
-        String userId = userService.getUserId();
-        log.info("Récupération de l'historique de l'utilisateur: {}",userId);
-        return repository.findLatestHistoryPerInvestment(userId);
+        String userEmail = userService.getEmail();
+        log.info("Récupération de l'historique de l'utilisateur: {}",userEmail);
+        return repository.findLatestHistoryPerInvestment(userEmail);
     }
 
     public List<HistoryDto> getHistoryByInvestmentId(Long id) {

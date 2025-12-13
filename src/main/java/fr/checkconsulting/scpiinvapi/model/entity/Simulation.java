@@ -22,7 +22,7 @@ public class Simulation {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String userId;
+    private String userEmail;
     private String name;
     private BigDecimal totalInvestment = BigDecimal.ZERO;
     private BigDecimal totalAnnualReturn = BigDecimal.ZERO;

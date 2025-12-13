@@ -27,10 +27,10 @@ public interface HistoryRepository extends JpaRepository<History, Long> {
         from History h3
         where h3.investment.id = h.investment.id
     )
-    and h.investment.investor.userId = :investorId
+    and h.investment.userEmail = :userEmail
     order by h.modificationDate desc
     """)
-    List<HistoryDto> findLatestHistoryPerInvestment(@Param("investorId") String investorId);
+    List<HistoryDto> findLatestHistoryPerInvestment(@Param("userEmail") String userEmail);
 
 
     List<History> findByInvestmentId(Long investmentId);

@@ -12,7 +12,6 @@ import fr.checkconsulting.scpiinvapi.mapper.InvestmentMapper;
 import fr.checkconsulting.scpiinvapi.model.entity.DistributionRate;
 import fr.checkconsulting.scpiinvapi.model.entity.History;
 import fr.checkconsulting.scpiinvapi.model.entity.Investment;
-import fr.checkconsulting.scpiinvapi.model.entity.Investor;
 import fr.checkconsulting.scpiinvapi.model.entity.Location;
 import fr.checkconsulting.scpiinvapi.model.entity.Scpi;
 import fr.checkconsulting.scpiinvapi.model.entity.Sector;
@@ -20,7 +19,6 @@ import fr.checkconsulting.scpiinvapi.model.enums.InvestmentStatus;
 import fr.checkconsulting.scpiinvapi.model.enums.InvestmentType;
 import fr.checkconsulting.scpiinvapi.repository.HistoryRepository;
 import fr.checkconsulting.scpiinvapi.repository.InvestmentRepository;
-import fr.checkconsulting.scpiinvapi.repository.InvestorRepository;
 import fr.checkconsulting.scpiinvapi.repository.ScpiRepository;
 import org.springframework.stereotype.Service;
 
@@ -42,7 +40,6 @@ public class InvestmentService {
     private final InvestmentRepository investmentRepository;
     private final HistoryRepository historyRepository;
     private final ScpiRepository scpiRepository;
-    private final InvestorRepository investorRepository;
     private final InvestmentMapper investmentMapper;
     private final UserService userService;
     private final NotificationService notificationService;
@@ -51,38 +48,28 @@ public class InvestmentService {
             InvestmentRepository investmentRepository,
             HistoryRepository historyRepository,
             ScpiRepository scpiRepository,
-            InvestorRepository investorRepository,
             InvestmentMapper investmentMapper,
             UserService userService,
             NotificationService notificationService) {
         this.investmentRepository = investmentRepository;
         this.historyRepository = historyRepository;
         this.scpiRepository = scpiRepository;
-        this.investorRepository = investorRepository;
         this.investmentMapper = investmentMapper;
         this.userService = userService;
         this.notificationService = notificationService;
     }
 
-    public void createInvestment(InvestmentRequestDTO request, String userId) {
+    public void createInvestment(InvestmentRequestDTO request) {
+
+        String userEmail = userService.getEmail();
+
         Scpi scpi = scpiRepository.findById(request.getScpiId())
                 .orElseThrow(() -> new IllegalArgumentException("SCPI non trouvée"));
 
-        Investor investor = investorRepository.findById(userId)
-                .orElseGet(() -> {
-                    Investor newInvestor = Investor.builder()
-                            .userId(userId)
-                            .userEmail(userService.getEmail())
-                            .firstName(userService.getFirstName())
-                            .lastName(userService.getLastName())
-                            .phoneNumber(userService.getPhoneNumber())
-                            .build();
-                    return investorRepository.save(newInvestor);
-                });
 
         Investment investment = investmentMapper.toEntity(request);
         investment.setScpi(scpi);
-        investment.setInvestor(investor);
+        investment.setUserEmail(userEmail);
         investment.setInvestmentType(request.getInvestmentType());
         investment.setNumberOfShares(request.getNumberOfShares());
         investment.setInvestmentAmount(request.getInvestmentAmount());
@@ -105,15 +92,17 @@ public class InvestmentService {
         notificationService.sendEmailNotification(userService.getEmail(), investment);
     }
 
-    public PortfolioSummaryDto getInvestorPortfolio(String userId, String sortBy) {
+    public PortfolioSummaryDto getInvestorPortfolio(String sortBy) {
+
+        String userEmail = userService.getEmail();
         List<Investment> investments;
         if ("amount".equalsIgnoreCase(sortBy)) {
-            investments = investmentRepository.findByInvestorUserIdOrderByInvestmentAmountDesc(userId);
+            investments = investmentRepository.findByUserEmailOrderByInvestmentAmountDesc(userEmail);
         } else {
-            investments = investmentRepository.findByInvestorUserIdOrderByInvestmentDateDesc(userId);
+            investments = investmentRepository.findByUserEmailOrderByInvestmentDateDesc(userEmail);
         }
 
-        BigDecimal totalAmount = investmentRepository.calculateTotalInvestedAmount(userId);
+        BigDecimal totalAmount = investmentRepository.calculateTotalInvestedAmount(userEmail);
         if (totalAmount == null) {
             totalAmount = BigDecimal.ZERO;
         }
@@ -155,9 +144,11 @@ public class InvestmentService {
         return totalRevenue;
     }
 
-    public ScpiRepartitionDto getPortfolioDistribution(String userId) {
+    public ScpiRepartitionDto getPortfolioDistribution() {
+
+        String userEmail = userService.getEmail();
         List<Investment> investments = investmentRepository
-                .findByInvestorUserIdOrderByInvestmentDateDesc(userId);
+                .findByUserEmailOrderByInvestmentDateDesc(userEmail);
 
         BigDecimal totalInvestedAmount = investments.stream()
                 .map(Investment::getInvestmentAmount)
@@ -268,13 +259,14 @@ public class InvestmentService {
     }
 
     public MonthlyRevenueDTO calculateMonthlyRevenue(
-            String userId,
             int months,
             Integer year,
             Long scpiId) {
 
+        String userEmail = userService.getEmail();
+
         List<Investment> investments = investmentRepository
-                .findByInvestorUserIdOrderByInvestmentDateDesc(userId);
+                .findByUserEmailOrderByInvestmentDateDesc(userEmail);
 
         if (scpiId != null) {
             investments = investments.stream()
@@ -318,7 +310,6 @@ public class InvestmentService {
         BigDecimal totalCumulRevenue = calculateTotalCumulativeRevenue(investments);
 
         List<MonthlyRevenueHistoryDTO> history = calculateRevenueHistory(
-                userId,
                 months,
                 year,
                 scpiId);
@@ -332,9 +323,11 @@ public class InvestmentService {
                 .build();
     }
 
-    public int calculateMonthsSinceFirstInvestment(String userId) {
+    public int calculateMonthsSinceFirstInvestment() {
+
+        String userEmail = userService.getEmail();
         List<Investment> investments = investmentRepository
-                .findByInvestorUserIdOrderByInvestmentDateAsc(userId);
+                .findByUserEmailOrderByInvestmentDateAsc(userEmail);
 
         if (investments.isEmpty()) {
             return 6;
@@ -349,13 +342,14 @@ public class InvestmentService {
     }
 
     private List<MonthlyRevenueHistoryDTO> calculateRevenueHistory(
-            String userId,
             int months,
             Integer year,
             Long scpiId) {
 
+        String userEmail = userService.getEmail();
+
         List<Investment> allInvestments = investmentRepository
-                .findByInvestorUserIdOrderByInvestmentDateAsc(userId);
+                .findByUserEmailOrderByInvestmentDateAsc(userEmail);
 
         if (scpiId != null) {
             allInvestments = allInvestments.stream()
@@ -468,6 +462,6 @@ public class InvestmentService {
     }
 
     public boolean hasInvested(String userId, Long scpiId) {
-        return investmentRepository.existsByInvestorUserIdAndScpiId(userId, scpiId);
+        return investmentRepository.existsByUserEmailAndScpiId(userId, scpiId);
     }
 }

@@ -2,15 +2,16 @@ package fr.checkconsulting.scpiinvapi.resource;
 
 import fr.checkconsulting.scpiinvapi.dto.request.ProfileRequest;
 import fr.checkconsulting.scpiinvapi.dto.response.ProfileDtoResponse;
-import fr.checkconsulting.scpiinvapi.model.entity.Profile;
-import fr.checkconsulting.scpiinvapi.model.enums.MaritalStatus;
 import fr.checkconsulting.scpiinvapi.service.ProfileService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/profile")
+@RequestMapping("/api/v1/profile")
 public class ProfileResource {
 
     private final ProfileService service;

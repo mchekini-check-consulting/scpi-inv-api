@@ -16,12 +16,16 @@ import java.math.BigDecimal;
 public class ProfileService {
 
     private final ProfileRepository repo;
+    private final UserService userService;
 
-    public ProfileService(ProfileRepository repo) {
+    public ProfileService(ProfileRepository repo, UserService userService) {
         this.repo = repo;
+        this.userService = userService;
     }
 
     public ProfileDtoResponse createProfile(ProfileRequest profilereq) {
+
+
         log.info("Création d'un profil avec status={} enfants={} revenuInvestisseur={} revenuConjoint={}",
                 profilereq.getStatus(),
                 profilereq.getChildren(),
@@ -30,15 +34,16 @@ public class ProfileService {
 
         validateProfileRequest(profilereq);
 
-        Profile profileInvest = new Profile();
-        profileInvest.setStatus(profilereq.getStatus());
-        profileInvest.setChildren(profilereq.getChildren());
-        profileInvest.setIncomeInvestor(profilereq.getIncomeInvestor());
+        Profile profile = new Profile();
+        profile.setStatus(profilereq.getStatus());
+        profile.setChildren(profilereq.getChildren());
+        profile.setIncomeInvestor(profilereq.getIncomeInvestor());
+        profile.setEmail(userService.getEmail());
 
         boolean hasConjoint = isConjointRequired(profilereq.getStatus());
-        profileInvest.setIncomeConjoint(hasConjoint ? profilereq.getIncomeConjoint() : null);
+        profile.setIncomeConjoint(hasConjoint ? profilereq.getIncomeConjoint() : null);
 
-        Profile saved = repo.save(profileInvest);
+        Profile saved = repo.save(profile);
         log.info("Profil créé avec id={}", saved.getId());
 
         return toResponse(saved);

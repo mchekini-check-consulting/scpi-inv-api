@@ -33,7 +33,7 @@ public class SimulationService {
 
     @Transactional
     public SimulationResponseDTO saveSimulation(SimulationSaveRequestDto request) {
-        String userId = userService.getUserId();
+        String userId = userService.getEmail();
         log.info("Sauvegarde simulation pour userId={} avec request={}", userId, request);
 
         if (request.getId() == null && (request.getItems() == null || request.getItems().isEmpty())) {
@@ -42,8 +42,8 @@ public class SimulationService {
         }
 
         Simulation simulation = (request.getId() == null)
-                ? Simulation.builder().userId(userId).name(request.getName()).build()
-                : simulationRepository.findByIdAndUserId(request.getId(), userId)
+                ? Simulation.builder().userEmail(userId).name(request.getName()).build()
+                : simulationRepository.findByIdAndUserEmail(request.getId(), userId)
                 .orElseThrow(() -> {
                     log.error("Simulation introuvable pour id={} et userId={}", request.getId(), userId);
                     return new EntityNotFoundException("Simulation introuvable");
@@ -80,7 +80,7 @@ public class SimulationService {
         String userId = userService.getUserId();
         log.info("Suppression SCPI id={} de simulation id={} pour userId={}", scpiId, simulationId, userId);
 
-        Simulation simulation = simulationRepository.findByIdAndUserId(simulationId, userId)
+        Simulation simulation = simulationRepository.findByIdAndUserEmail(simulationId, userId)
                 .orElseThrow(() -> {
                     log.error("Simulation introuvable id={} pour userId={}", simulationId, userId);
                     return new EntityNotFoundException("Simulation introuvable");
@@ -101,7 +101,7 @@ public class SimulationService {
         log.info("Mise à jour des parts SCPI id={} dans simulation id={} pour userId={} avec shares={}",
                 scpiId, simulationId, userId, shares);
 
-        Simulation simulation = simulationRepository.findByIdAndUserId(simulationId, userId)
+        Simulation simulation = simulationRepository.findByIdAndUserEmail(simulationId, userId)
                 .orElseThrow(() -> {
                     log.error("Simulation introuvable id={} pour userId={}", simulationId, userId);
                     return new EntityNotFoundException("Simulation introuvable");
@@ -130,7 +130,7 @@ public class SimulationService {
         String userId = userService.getUserId();
         log.info("Récupération simulation id={} pour userId={}", simulationId, userId);
 
-        Simulation simulation = simulationRepository.findByIdAndUserId(simulationId, userId)
+        Simulation simulation = simulationRepository.findByIdAndUserEmail(simulationId, userId)
                 .orElseThrow(() -> {
                     log.error("Simulation introuvable id={} pour userId={}", simulationId, userId);
                     return new EntityNotFoundException("Simulation introuvable");

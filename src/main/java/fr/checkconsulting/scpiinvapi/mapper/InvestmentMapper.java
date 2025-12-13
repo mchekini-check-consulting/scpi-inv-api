@@ -19,7 +19,6 @@ import java.util.List;
 public interface InvestmentMapper {
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "scpi", ignore = true)
-    @Mapping(target = "investor", ignore = true)
     @Mapping(target = "history", ignore = true)
     @Mapping(target = "investmentDate", ignore = true)
     Investment toEntity(InvestmentRequestDTO dto);

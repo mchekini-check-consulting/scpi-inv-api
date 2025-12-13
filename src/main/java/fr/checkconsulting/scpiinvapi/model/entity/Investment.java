@@ -41,9 +41,7 @@ public class Investment {
     @JoinColumn(name = "scpi_id")
     private Scpi scpi;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "investor_id")
-    private Investor investor;
+    private String userEmail;
 
     @OneToMany(mappedBy = "investment", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<History> history;
