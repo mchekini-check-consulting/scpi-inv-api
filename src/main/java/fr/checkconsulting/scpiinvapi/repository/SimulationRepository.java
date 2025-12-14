@@ -10,7 +10,7 @@ import java.util.Optional;
 @Repository
 public interface SimulationRepository  extends JpaRepository<Simulation, Long> {
 
-    List<Simulation> findAllByUserEmail(String userEmail);
+    List<Simulation> findAllByUserEmailOrderByCreatedAtDesc(String userEmail);
 
     Optional<Simulation> findByIdAndUserEmail(Long id, String userEmail);
 

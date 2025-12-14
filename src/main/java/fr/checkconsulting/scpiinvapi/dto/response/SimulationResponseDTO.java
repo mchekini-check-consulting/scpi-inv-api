@@ -18,4 +18,6 @@ public class SimulationResponseDTO {
     private BigDecimal totalInvestment;
     private BigDecimal totalAnnualReturn;
     private List<SimulationScpiResponseDTO> items;
+    private List<RepartitionItemDto> locations;
+    private List<RepartitionItemDto> sectors;
 }

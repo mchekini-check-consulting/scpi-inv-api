@@ -3,6 +3,7 @@ package fr.checkconsulting.scpiinvapi.service;
 
 import fr.checkconsulting.scpiinvapi.dto.request.ProfileRequest;
 import fr.checkconsulting.scpiinvapi.dto.response.ProfileDtoResponse;
+import fr.checkconsulting.scpiinvapi.mapper.ProfileMapper;
 import fr.checkconsulting.scpiinvapi.model.entity.Profile;
 import fr.checkconsulting.scpiinvapi.model.enums.MaritalStatus;
 import fr.checkconsulting.scpiinvapi.repository.ProfileRepository;
@@ -17,15 +18,15 @@ public class ProfileService {
 
     private final ProfileRepository repo;
     private final UserService userService;
+    private final ProfileMapper profileMapper;
 
-    public ProfileService(ProfileRepository repo, UserService userService) {
+    public ProfileService(ProfileRepository repo, UserService userService, ProfileMapper profileMapper) {
         this.repo = repo;
         this.userService = userService;
+        this.profileMapper = profileMapper;
     }
 
     public ProfileDtoResponse createProfile(ProfileRequest profilereq) {
-
-
         log.info("Création d'un profil avec status={} enfants={} revenuInvestisseur={} revenuConjoint={}",
                 profilereq.getStatus(),
                 profilereq.getChildren(),
@@ -85,5 +86,28 @@ public class ProfileService {
         resp.setIncomeConjoint(profile.getIncomeConjoint());
         return resp;
     }
+
+    public ProfileDtoResponse updateProfile(Long id, ProfileRequest req) {
+        String userEmail = userService.getEmail();
+
+        Profile existing = repo.findById(id)
+                .orElseThrow(() -> new IllegalStateException("Profil non trouvé"));
+
+        if (!existing.getEmail().equals(userEmail)) {
+            throw new SecurityException("Vous ne pouvez pas modifier ce profil");
+        }
+
+        boolean hasConjoint = req.getStatus() == MaritalStatus.MARIE
+                || req.getStatus() == MaritalStatus.PACSE;
+
+        existing.setStatus(req.getStatus());
+        existing.setChildren(req.getChildren());
+        existing.setIncomeInvestor(req.getIncomeInvestor());
+        existing.setIncomeConjoint(hasConjoint ? req.getIncomeConjoint() : null);
+
+        Profile saved = repo.save(existing);
+        return profileMapper.toResponse(saved);
+    }
+
 }
 

@@ -3,6 +3,10 @@ package fr.checkconsulting.scpiinvapi.resource;
 import fr.checkconsulting.scpiinvapi.dto.response.*;
 import fr.checkconsulting.scpiinvapi.service.ScpiService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -57,6 +61,33 @@ public class ScpiResource {
         return scpiService.getScpiDetails(scpiName, managerName);
     }
 
+    @Operation(
+            summary = "Liste des SCPI disponibles pour le comparateur",
+            description = """
+        Retourne toutes les SCPI 
+        Utilisées par le comparateur des scpis.
+        """
+    )
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Liste des SCPI récupérée avec succès",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = ScpiWithRatesDTOResponse.class)
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "204",
+                    description = "Aucune SCPI disponible pour la comparaison",
+                    content = @Content
+            ),
+            @ApiResponse(
+                    responseCode = "500",
+                    description = "Erreur interne lors de la récupération des données du comparateur",
+                    content = @Content
+            )
+    })
     @GetMapping("/comparator-scpis")
     public ResponseEntity<List<ScpiWithRatesDTOResponse>> getComparatorData() {
         return ResponseEntity.ok(scpiService.getAllForComparator());
@@ -66,15 +97,36 @@ public class ScpiResource {
     @Operation(
             summary = "Liste des SCPI disponibles pour le simulateur",
             description = """
-        Retourne toutes les SCPI pleines propriétés (démembrement = false) 
+        Retourne toutes les SCPI 
         avec le dérnier rendement de distribution  (année la plus récente).
-        Utilisé par le simulateur d'investissement.
+        Utilisées par le simulateur.
         """
     )
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Liste des SCPI récupérée avec succès",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = ScpiSimulatorDTOResponse.class)
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "204",
+                    description = "Aucune SCPI disponible pour le simulateur",
+                    content = @Content
+            ),
+            @ApiResponse(
+                    responseCode = "500",
+                    description = "Erreur interne lors de la récupération des SCPI du simulateur",
+                    content = @Content
+            )
+    })
     @GetMapping("/scpis-full-ownership")
     public List<ScpiSimulatorDTOResponse> getScpiSimulatorData() {
         return scpiService.getScpiForSimulator();
     }
+
 
     @GetMapping("/scpiScheduledPayment")
     public ResponseEntity<List<ScpiSummaryDto>> getScpiScheduledPayment() {

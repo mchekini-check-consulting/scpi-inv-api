@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 @Data
 @AllArgsConstructor
@@ -18,4 +19,6 @@ public class SimulationScpiResponseDTO {
     private Integer shares;
     private BigDecimal amount;
     private BigDecimal annualReturn;
+    private List<RepartitionItemDto> locations;
+    private List<RepartitionItemDto> sectors;
 }
