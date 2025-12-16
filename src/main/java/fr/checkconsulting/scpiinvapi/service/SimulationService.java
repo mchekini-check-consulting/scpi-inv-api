@@ -3,7 +3,7 @@ package fr.checkconsulting.scpiinvapi.service;
 import fr.checkconsulting.scpiinvapi.dto.request.SimulationSaveRequestDto;
 import fr.checkconsulting.scpiinvapi.dto.request.SimulationScpiLineRequestDto;
 import fr.checkconsulting.scpiinvapi.dto.response.SimulationResponseDTO;
-import fr.checkconsulting.scpiinvapi.dto.response.SimulationScpiResponseDTO;
+import fr.checkconsulting.scpiinvapi.mapper.SimulationMapper;
 import fr.checkconsulting.scpiinvapi.model.entity.Scpi;
 import fr.checkconsulting.scpiinvapi.model.entity.Simulation;
 import fr.checkconsulting.scpiinvapi.model.entity.SimulationScpi;
@@ -20,7 +20,7 @@ import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Optional;
 
 @Slf4j
 @Service
@@ -30,80 +30,136 @@ public class SimulationService {
     private final SimulationRepository simulationRepository;
     private final ScpiRepository scpiRepository;
     private final UserService userService;
+    private final SimulationMapper simulationMapper;
 
     @Transactional
     public SimulationResponseDTO saveSimulation(SimulationSaveRequestDto request) {
-        String userId = userService.getEmail();
-        log.info("Sauvegarde simulation pour userId={} avec request={}", userId, request);
 
-        if (request.getId() == null && (request.getItems() == null || request.getItems().isEmpty())) {
-            log.error("Tentative de création d'une simulation sans SCPI");
-            throw new IllegalArgumentException("Impossible de créer une simulation sans SCPI");
-        }
+        String userEmail = userService.getEmail();
+        log.info("Début sauvegarde simulation | user={} | simulationId={}",
+                userEmail, request.getId());
 
-        Simulation simulation = (request.getId() == null)
-                ? Simulation.builder().userEmail(userId).name(request.getName()).build()
-                : simulationRepository.findByIdAndUserEmail(request.getId(), userId)
-                .orElseThrow(() -> {
-                    log.error("Simulation introuvable pour id={} et userId={}", request.getId(), userId);
-                    return new EntityNotFoundException("Simulation introuvable");
-                });
+        Simulation simulation = request.getId() == null
+                ? Simulation.builder()
+                .userEmail(userEmail)
+                .name(request.getName())
+                .build()
+                : simulationRepository.findByIdAndUserEmail(request.getId(), userEmail)
+                .orElseThrow(() -> new EntityNotFoundException("Simulation introuvable"));
 
         if (simulation.getItems() == null) {
             simulation.setItems(new ArrayList<>());
         }
 
-        if (request.getItems() != null) {
-            for (SimulationScpiLineRequestDto line : request.getItems()) {
-                boolean exists = simulation.getItems().stream()
-                        .anyMatch(i -> i.getScpi().getId().equals(line.getScpiId()));
-                if (!exists) {
-                    log.debug("Ajout SCPI id={} avec {} parts", line.getScpiId(), line.getShares());
-                    Scpi scpi = scpiRepository.findById(line.getScpiId())
-                            .orElseThrow(() -> {
-                                log.error("SCPI introuvable id={}", line.getScpiId());
-                                return new EntityNotFoundException("SCPI introuvable");
-                            });
+        for (SimulationScpiLineRequestDto line : request.getItems()) {
+            boolean exists = simulation.getItems().stream()
+                    .anyMatch(i -> i.getScpi().getId().equals(line.getScpiId()));
 
-                    SimulationScpi item = buildSimulationScpi(simulation, scpi, line.getShares());
-                    simulation.getItems().add(item);
-                }
+            if (exists) {
+                log.debug("SCPI déjà existante, ignorée | scpiId={}", line.getScpiId());
+                continue;
             }
+
+            Scpi scpi = scpiRepository.findById(line.getScpiId())
+                    .orElseThrow(() -> {
+                        log.error("SCPI introuvable | scpiId={}", line.getScpiId());
+                        return new EntityNotFoundException("SCPI introuvable");
+                    });
+
+            BigDecimal amount = scpi.getScpiValues().get(0).getSharePrice()
+                    .multiply(BigDecimal.valueOf(line.getShares()));
+
+            BigDecimal annualReturn = amount
+                    .multiply(scpi.getDistributionRates().get(0).getRate())
+                    .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
+
+            simulation.getItems().add(
+                    SimulationScpi.builder()
+                            .simulation(simulation)
+                            .scpi(scpi)
+                            .shares(line.getShares())
+                            .amount(amount)
+                            .annualReturn(annualReturn)
+                            .build()
+            );
         }
 
-        updateTotals(simulation, request.getName());
-        return saveAndBuildResponse(simulation);
+        simulation.setTotalInvestment(
+                simulation.getItems().stream()
+                        .map(SimulationScpi::getAmount)
+                        .reduce(BigDecimal.ZERO, BigDecimal::add)
+        );
+
+        simulation.setTotalAnnualReturn(
+                simulation.getItems().stream()
+                        .map(SimulationScpi::getAnnualReturn)
+                        .reduce(BigDecimal.ZERO, BigDecimal::add)
+        );
+
+        Simulation saved = simulationRepository.save(simulation);
+        log.info("Simulation sauvegardée | id={} | totalInvestment={} | totalAnnualReturn={}",
+                saved.getId(),
+                saved.getTotalInvestment(),
+                saved.getTotalAnnualReturn()
+        );
+        return simulationMapper.toDto(saved);
     }
 
     @Transactional
-    public SimulationResponseDTO deleteScpi(Long simulationId, Long scpiId) {
-        String userId = userService.getUserId();
-        log.info("Suppression SCPI id={} de simulation id={} pour userId={}", scpiId, simulationId, userId);
+    public Optional<SimulationResponseDTO> deleteScpi(Long simulationId, Long scpiId) {
 
-        Simulation simulation = simulationRepository.findByIdAndUserEmail(simulationId, userId)
-                .orElseThrow(() -> {
-                    log.error("Simulation introuvable id={} pour userId={}", simulationId, userId);
-                    return new EntityNotFoundException("Simulation introuvable");
-                });
+        String userEmail = userService.getEmail();
+        log.info("Suppression SCPI de la simulation | simulationId={} | scpiId={} | user={}",
+                simulationId, scpiId, userEmail);
 
-        boolean removed = simulation.getItems().removeIf(item -> item.getScpi().getId().equals(scpiId));
+        Simulation simulation = simulationRepository
+                .findByIdAndUserEmail(simulationId, userEmail)
+                .orElseThrow(() -> new EntityNotFoundException("Simulation introuvable"));
+
+        boolean removed = simulation.getItems()
+                .removeIf(item -> item.getScpi().getId().equals(scpiId));
+
         if (!removed) {
-            log.warn("SCPI id={} non trouvée dans simulation id={}", scpiId, simulationId);
+            log.warn("Aucune SCPI supprimée | simulationId={} | scpiId={}", simulationId, scpiId);
         }
 
-        updateTotals(simulation, simulation.getName());
-        return saveAndBuildResponse(simulation);
+        if (simulation.getItems().isEmpty()) {
+            log.warn("Simulation supprimée car vide | simulationId={}", simulationId);
+            simulationRepository.delete(simulation);
+            return Optional.empty();
+        }
+
+        simulation.setTotalInvestment(
+                simulation.getItems().stream()
+                        .map(SimulationScpi::getAmount)
+                        .reduce(BigDecimal.ZERO, BigDecimal::add)
+        );
+
+        simulation.setTotalAnnualReturn(
+                simulation.getItems().stream()
+                        .map(SimulationScpi::getAnnualReturn)
+                        .reduce(BigDecimal.ZERO, BigDecimal::add)
+        );
+
+        simulation.setUpdatedAt(LocalDateTime.now());
+
+        Simulation saved = simulationRepository.save(simulation);
+
+        return Optional.of(simulationMapper.toDto(saved));
     }
 
     @Transactional
     public SimulationResponseDTO updateScpiShares(Long simulationId, Long scpiId, int shares) {
-        String userId = userService.getUserId();
-        log.info("Mise à jour des parts SCPI id={} dans simulation id={} pour userId={} avec shares={}",
-                scpiId, simulationId, userId, shares);
 
-        Simulation simulation = simulationRepository.findByIdAndUserEmail(simulationId, userId)
+        String userEmail = userService.getEmail();
+        log.info("Mise à jour parts SCPI | simulationId={} | scpiId={} | shares={} | user={}",
+                simulationId, scpiId, shares, userEmail);
+
+        Simulation simulation = simulationRepository
+                .findByIdAndUserEmail(simulationId, userEmail)
                 .orElseThrow(() -> {
-                    log.error("Simulation introuvable id={} pour userId={}", simulationId, userId);
+                    log.error("Simulation introuvable | id={} | user={}",
+                            simulationId, userEmail);
                     return new EntityNotFoundException("Simulation introuvable");
                 });
 
@@ -111,91 +167,88 @@ public class SimulationService {
                 .filter(i -> i.getScpi().getId().equals(scpiId))
                 .findFirst()
                 .orElseThrow(() -> {
-                    log.error("SCPI id={} introuvable dans simulation id={}", scpiId, simulationId);
+                    log.error("Cette scpi ne figure pas dans la simulation | scpiId={} | simulationId={}",
+                            scpiId, simulationId);
                     return new EntityNotFoundException("SCPI introuvable dans la simulation");
                 });
 
-        log.debug("Anciennes parts={} pour SCPI id={}", item.getShares(), scpiId);
-        SimulationScpi updatedItem = buildSimulationScpi(simulation, item.getScpi(), shares);
-        item.setShares(updatedItem.getShares());
-        item.setAmount(updatedItem.getAmount());
-        item.setAnnualReturn(updatedItem.getAnnualReturn());
+        item.setShares(shares);
 
-        updateTotals(simulation, simulation.getName());
-        return saveAndBuildResponse(simulation);
+        BigDecimal sharePrice = item.getScpi()
+                .getScpiValues().get(0).getSharePrice();
+
+        BigDecimal amount = sharePrice.multiply(BigDecimal.valueOf(shares));
+
+        BigDecimal annualReturn = amount
+                .multiply(item.getScpi().getDistributionRates().get(0).getRate())
+                .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
+
+        item.setAmount(amount);
+        item.setAnnualReturn(annualReturn);
+
+        simulation.setTotalInvestment(
+                simulation.getItems().stream()
+                        .map(SimulationScpi::getAmount)
+                        .reduce(BigDecimal.ZERO, BigDecimal::add)
+        );
+
+        simulation.setTotalAnnualReturn(
+                simulation.getItems().stream()
+                        .map(SimulationScpi::getAnnualReturn)
+                        .reduce(BigDecimal.ZERO, BigDecimal::add)
+        );
+
+        simulation.setUpdatedAt(LocalDateTime.now());
+
+        Simulation savedSimulation = simulationRepository.save(simulation);
+
+        log.info("Parts mises à jour | simulationId={} | totalInvestment={}",
+                savedSimulation.getId(), savedSimulation.getTotalInvestment());
+        return simulationMapper.toDto(savedSimulation);
     }
+
 
     @Transactional
     public SimulationResponseDTO getSimulationById(Long simulationId) {
-        String userId = userService.getUserId();
-        log.info("Récupération simulation id={} pour userId={}", simulationId, userId);
+        String userEmail = userService.getEmail();
+        log.info("Consultation simulation | id={} | user={}", simulationId, userEmail);
 
-        Simulation simulation = simulationRepository.findByIdAndUserEmail(simulationId, userId)
+        Simulation simulation = simulationRepository
+                .findByIdAndUserEmail(simulationId, userEmail)
                 .orElseThrow(() -> {
-                    log.error("Simulation introuvable id={} pour userId={}", simulationId, userId);
+                    log.error("Simulation introuvable | id={} | user={}",
+                            simulationId, userEmail);
                     return new EntityNotFoundException("Simulation introuvable");
                 });
 
-        return buildResponse(simulation);
+        return simulationMapper.toDto(simulation);
     }
 
-    private SimulationScpi buildSimulationScpi(Simulation simulation, Scpi scpi, int shares) {
-        BigDecimal sharePrice = scpi.getScpiValues().get(0).getSharePrice();
-        BigDecimal amount = sharePrice.multiply(BigDecimal.valueOf(shares));
-        BigDecimal annualReturn = amount.multiply(scpi.getDistributionRates().get(0).getRate())
-                .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
 
-        return SimulationScpi.builder()
-                .simulation(simulation)
-                .scpi(scpi)
-                .shares(shares)
-                .amount(amount)
-                .annualReturn(annualReturn)
-                .build();
+    public List<SimulationResponseDTO> getAllSimulations() {
+        String userEmail = userService.getEmail();
+        log.info("Récupération simulations | user={}", userEmail);
+        List<Simulation> simulations =
+                simulationRepository.findAllByUserEmailOrderByCreatedAtDesc(userEmail);
+
+        log.info("{} simulations trouvées | user={}", simulations.size(), userEmail);
+
+        return simulationMapper.toDtoList(simulations);
     }
 
-    private void updateTotals(Simulation simulation, String name) {
-        BigDecimal totalInvestment = simulation.getItems().stream()
-                .map(SimulationScpi::getAmount)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+    public void deleteSimulation(Long simulationId) {
+        String userEmail = userService.getEmail();
+        log.info("Suppression simulation | id={} | user={}", simulationId, userEmail);
 
-        BigDecimal totalAnnualReturn = simulation.getItems().stream()
-                .map(SimulationScpi::getAnnualReturn)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        Simulation simulation = simulationRepository.findByIdAndUserEmail(simulationId, userEmail)
+                .orElseThrow(() -> {
+                    log.error("Simulation introuvable | id={} | user={}",
+                            simulationId, userEmail);
+                    return new EntityNotFoundException("Simulation introuvable");
+                });
+        simulationRepository.delete(simulation);
+        log.info("Simulation supprimée | id={} | user={}", simulationId, userEmail);
 
-        simulation.setTotalInvestment(totalInvestment);
-        simulation.setTotalAnnualReturn(totalAnnualReturn);
-        simulation.setName(name);
-        simulation.setUpdatedAt(LocalDateTime.now());
-
-        log.debug("Totaux recalculés: investissement={} rendementAnnuel={}", totalInvestment, totalAnnualReturn);
-    }
-
-    private SimulationResponseDTO saveAndBuildResponse(Simulation simulation) {
-        Simulation savedSimulation = simulationRepository.save(simulation);
-        log.info("Simulation id={} sauvegardée avec {} items", savedSimulation.getId(), savedSimulation.getItems().size());
-        return buildResponse(savedSimulation);
-    }
-
-    private SimulationResponseDTO buildResponse(Simulation simulation) {
-        List<SimulationScpiResponseDTO> itemsDTO = simulation.getItems().stream()
-                .map(item -> SimulationScpiResponseDTO.builder()
-                        .id(item.getId())
-                        .scpiId(item.getScpi().getId())
-                        .scpiName(item.getScpi().getName())
-                        .shares(item.getShares())
-                        .amount(item.getAmount())
-                        .annualReturn(item.getAnnualReturn())
-                        .build())
-                .collect(Collectors.toList());
-
-        return SimulationResponseDTO.builder()
-                .id(simulation.getId())
-                .name(simulation.getName())
-                .totalInvestment(simulation.getTotalInvestment())
-                .totalAnnualReturn(simulation.getTotalAnnualReturn())
-                .items(itemsDTO)
-                .build();
     }
 }
 

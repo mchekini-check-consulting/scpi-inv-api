@@ -27,11 +27,22 @@ public class Simulation {
     private BigDecimal totalInvestment = BigDecimal.ZERO;
     private BigDecimal totalAnnualReturn = BigDecimal.ZERO;
 
-    private LocalDateTime createdAt = LocalDateTime.now();
-    private LocalDateTime updatedAt = LocalDateTime.now();
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 
     @Builder.Default
     @JsonManagedReference
     @OneToMany(mappedBy = "simulation", cascade = CascadeType.ALL, orphanRemoval = true,fetch = FetchType.LAZY)
     private List<SimulationScpi> items = new ArrayList<>();
+
+    @PrePersist
+    public void prePersist() {
+        this.createdAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    public void preUpdate() {
+        this.updatedAt = LocalDateTime.now();
+    }
 }

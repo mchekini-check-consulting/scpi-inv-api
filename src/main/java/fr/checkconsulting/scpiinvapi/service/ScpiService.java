@@ -82,8 +82,8 @@ public class ScpiService {
                     return new IllegalArgumentException("SCPI non trouvée avec l'id: " + id);
                 });
 
-        String userId = userService.getEmail();
-        List<Investment> investments = investmentRepository.findByUserEmailAndScpiId(userId, id);
+        String userEmail = userService.getEmail();
+        List<Investment> investments = investmentRepository.findByUserEmailAndScpiId(userEmail, id);
 
         BigDecimal totalInvestedAmount = investments.stream()
                 .map(Investment::getInvestmentAmount)
@@ -92,7 +92,7 @@ public class ScpiService {
 
         boolean hasInvested = !investments.isEmpty();
 
-        log.debug("User {} a investi={} montant total={}", userId, hasInvested, totalInvestedAmount);
+        log.debug("User {} a investi={} montant total={}", userEmail, hasInvested, totalInvestedAmount);
 
         ScpiInvestmentDto dto = scpiMapper.toScpiInvestmentDto(scpi);
         dto.setHasInvested(hasInvested);
@@ -120,9 +120,9 @@ public class ScpiService {
     }
 
     public List<ScpiSimulatorDTOResponse> getScpiForSimulator() {
-        log.info("Récupération des SCPI pour simulateur (hors démembrement)");
+        log.info("Récupération des SCPI pour simulateur");
 
-        return scpiRepository.findByDismembermentIsFalse().stream()
+        return scpiRepository.findAll().stream()
                 .map(scpiMapper::toSimulatorDto)
                 .sorted(Comparator
                         .<ScpiSimulatorDTOResponse, BigDecimal>comparing(

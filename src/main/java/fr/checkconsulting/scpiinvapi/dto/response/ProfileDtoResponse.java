@@ -14,6 +14,7 @@ import java.math.BigDecimal;
 @Builder
 public class ProfileDtoResponse {
     private Long id;
+    private String userEmail;
     private MaritalStatus status;
     private Integer children;
     private BigDecimal incomeInvestor;
