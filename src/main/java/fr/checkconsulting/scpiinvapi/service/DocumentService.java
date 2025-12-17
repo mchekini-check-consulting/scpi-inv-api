@@ -3,6 +3,8 @@ package fr.checkconsulting.scpiinvapi.service;
 import fr.checkconsulting.scpiinvapi.dto.request.UserDocumentDto;
 import fr.checkconsulting.scpiinvapi.mapper.UserDocumentMapper;
 import fr.checkconsulting.scpiinvapi.model.entity.UserDocument;
+import fr.checkconsulting.scpiinvapi.model.enums.DocumentStatus;
+import fr.checkconsulting.scpiinvapi.model.enums.DocumentType;
 import fr.checkconsulting.scpiinvapi.repository.UserDocumentRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -51,4 +53,36 @@ public class DocumentService {
         entity.setStatus(dto.getStatus());
         entity.setLastUpdatedAt(dto.getLastUpdatedAt());
     }
+
+    public boolean areAllDocumentsValidated(String userEmail) {
+
+        log.debug("Vérification des documents réglementaires pour {}", userEmail);
+
+        List<UserDocument> documents = userDocumentRepository.findByUserEmail(userEmail);
+
+        if (documents == null || documents.isEmpty()) {
+            log.debug("Aucun document trouvé pour l'utilisateur {}", userEmail);
+            return false;
+        }
+
+        boolean result = documents.stream()
+                .filter(doc ->
+                        doc.getType() == DocumentType.PIECE_IDENTITE ||
+                                doc.getType() == DocumentType.JUSTIFICATIF_DOMICILE ||
+                                doc.getType() == DocumentType.AVIS_IMPOSITION
+                )
+                .allMatch(doc -> doc.getStatus() == DocumentStatus.VALIDATED);
+
+        if (!result) {
+            log.debug("Documents réglementaires NON validés pour {}", userEmail);
+        } else {
+            log.debug("Tous les documents réglementaires sont validés pour {}", userEmail);
+        }
+
+        return result;
+    }
+
+
 }
+
+
