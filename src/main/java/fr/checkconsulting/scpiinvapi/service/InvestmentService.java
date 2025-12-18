@@ -67,7 +67,6 @@ public class InvestmentService {
         Scpi scpi = scpiRepository.findById(request.getScpiId())
                 .orElseThrow(() -> new IllegalArgumentException("SCPI non trouvée"));
 
-
         Investment investment = investmentMapper.toEntity(request);
         investment.setScpi(scpi);
         investment.setUserEmail(userEmail);
@@ -233,8 +232,8 @@ public class InvestmentService {
                 String countryName = country.getCountry();
 
                 BigDecimal countryContribution = investment.getInvestmentAmount()
-                    .multiply(country.getPercentage())
-                    .divide(BigDecimal.valueOf(100), MathContext.DECIMAL128);
+                        .multiply(country.getPercentage())
+                        .divide(BigDecimal.valueOf(100), MathContext.DECIMAL128);
 
                 countryAmounts.merge(countryName, countryContribution, BigDecimal::add);
             }
@@ -246,8 +245,8 @@ public class InvestmentService {
                     BigDecimal countryAmount = entry.getValue();
 
                     BigDecimal percentage = countryAmount
-                        .multiply(BigDecimal.valueOf(100))
-                        .divide(totalInvestedAmount, MathContext.DECIMAL128);
+                            .multiply(BigDecimal.valueOf(100))
+                            .divide(totalInvestedAmount, 2, RoundingMode.HALF_UP);
 
                     return RepartitionItemDto.builder()
                             .label(countryName)
