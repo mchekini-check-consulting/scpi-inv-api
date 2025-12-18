@@ -23,6 +23,7 @@ import fr.checkconsulting.scpiinvapi.repository.ScpiRepository;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.math.MathContext;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -232,8 +233,8 @@ public class InvestmentService {
                 String countryName = country.getCountry();
 
                 BigDecimal countryContribution = investment.getInvestmentAmount()
-                        .multiply(country.getPercentage())
-                        .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
+                    .multiply(country.getPercentage())
+                    .divide(BigDecimal.valueOf(100), MathContext.DECIMAL128);
 
                 countryAmounts.merge(countryName, countryContribution, BigDecimal::add);
             }
@@ -245,13 +246,13 @@ public class InvestmentService {
                     BigDecimal countryAmount = entry.getValue();
 
                     BigDecimal percentage = countryAmount
-                            .multiply(BigDecimal.valueOf(100))
-                            .divide(totalInvestedAmount, 2, RoundingMode.HALF_UP);
+                        .multiply(BigDecimal.valueOf(100))
+                        .divide(totalInvestedAmount, MathContext.DECIMAL128);
 
                     return RepartitionItemDto.builder()
                             .label(countryName)
                             .percentage(percentage)
-                            .amount(countryAmount) // ✅ AJOUTE LE MONTANT
+                            .amount(countryAmount)
                             .build();
                 })
                 .sorted((r1, r2) -> r2.getPercentage().compareTo(r1.getPercentage()))
