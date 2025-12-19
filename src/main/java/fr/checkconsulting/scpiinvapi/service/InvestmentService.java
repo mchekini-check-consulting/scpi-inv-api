@@ -17,6 +17,7 @@ import fr.checkconsulting.scpiinvapi.model.entity.Scpi;
 import fr.checkconsulting.scpiinvapi.model.entity.Sector;
 import fr.checkconsulting.scpiinvapi.model.enums.InvestmentStatus;
 import fr.checkconsulting.scpiinvapi.model.enums.InvestmentType;
+import fr.checkconsulting.scpiinvapi.model.enums.PaymentType;
 import fr.checkconsulting.scpiinvapi.repository.HistoryRepository;
 import fr.checkconsulting.scpiinvapi.repository.InvestmentRepository;
 import fr.checkconsulting.scpiinvapi.repository.ScpiRepository;
@@ -69,16 +70,13 @@ public class InvestmentService {
     public void createInvestment(InvestmentRequestDTO request) {
 
         String userEmail = userService.getEmail();
-
-
         if (!documentService.areAllDocumentsValidated(userEmail)) {
-            log.warn("Tentative d'investissement bloquée : documents non validés pour {}", userEmail);
+            log.warn("Scheduled investment blocked (documents missing) | user={}", userEmail);
             throw new ResponseStatusException(
                     HttpStatus.FORBIDDEN,
                     "REGULATORY_DOCUMENTS_REQUIRED"
             );
         }
-
 
         Scpi scpi = scpiRepository.findById(request.getScpiId())
                 .orElseThrow(() -> {
@@ -89,34 +87,56 @@ public class InvestmentService {
                     return new IllegalArgumentException("SCPI non trouvée");
                 });
 
-        Investment investment = investmentMapper.toEntity(request);
-        investment.setScpi(scpi);
-        investment.setUserEmail(userEmail);
-        investment.setInvestmentType(request.getInvestmentType());
-        investment.setNumberOfShares(request.getNumberOfShares());
-        investment.setInvestmentAmount(request.getInvestmentAmount());
-        investment.setDismembermentYears(request.getDismembermentYears());
-        investment.setInvestmentDate(LocalDateTime.now());
-        investment.setPaymentType(request.getPaymentType());
-        investment.setScheduledPaymentDate(request.getScheduledPaymentDate());
-        investment.setMonthlyAmount(request.getMonthlyAmount());
+        if (request.getInvestmentAmount() != null && request.getInvestmentAmount().compareTo(BigDecimal.ZERO) > 0
+        ) {
+            Investment firstInvestment = Investment.builder()
+                    .scpi(scpi)
+                    .userEmail(userEmail)
+                    .paymentType(PaymentType.ONE_SHOT)
+                    .investmentAmount(request.getInvestmentAmount())
+                    .numberOfShares(request.getNumberOfShares())
+                    .investmentType(request.getInvestmentType())
+                    .investmentDate(LocalDateTime.now())
+                    .build();
 
-        Investment saved = investmentRepository.save(investment);
-        log.info(
-                "Investissement sauvegardé | investmentId={} | user={} | scpiId={}",
-                saved.getId(), userEmail, scpi.getId()
-        );
+            investmentRepository.save(firstInvestment);
+            createHistory(firstInvestment);
 
-        History history = History.builder()
-                .investment(saved)
-                .creationDate(ZonedDateTime.now(ZoneId.of("Europe/Paris")).toLocalDateTime())
-                .modificationDate(ZonedDateTime.now(ZoneId.of("Europe/Paris")).toLocalDateTime())
-                .status(InvestmentStatus.PENDING)
-                .build();
+            log.info("First investment created | user={} | scpi={}", userEmail, scpi.getId());
+        }
 
-        historyRepository.save(history);
-        notificationService.sendEmailNotification(userService.getEmail(), investment);
+        if (request.getMonthlyAmount() != null && request.getMonthlyAmount().compareTo(BigDecimal.ZERO) > 0
+                && PaymentType.SCHEDULED.name().equalsIgnoreCase(request.getPaymentType().name())) {
+            Investment scheduledInvestment = Investment.builder()
+                    .scpi(scpi)
+                    .userEmail(userEmail)
+                    .paymentType(PaymentType.SCHEDULED)
+                    .monthlyAmount(request.getMonthlyAmount())
+                    .numberOfSharesMonth(request.getNumberOfSharesMonth())
+                    .scheduledPaymentDate(request.getScheduledPaymentDate())
+                    .investmentType(request.getInvestmentType())
+                    .investmentDate(LocalDateTime.now())
+                    .build();
+
+            investmentRepository.save(scheduledInvestment);
+            createHistory(scheduledInvestment);
+
+            log.info("Scheduled investment created | user={} | scpi={}", userEmail, scpi.getId());
+            notificationService.sendEmailNotification(userEmail, scheduledInvestment);
+        }
     }
+
+    private void createHistory(Investment investment) {
+        historyRepository.save(
+                History.builder()
+                        .investment(investment)
+                        .creationDate(ZonedDateTime.now(ZoneId.of("Europe/Paris")).toLocalDateTime())
+                        .modificationDate(ZonedDateTime.now(ZoneId.of("Europe/Paris")).toLocalDateTime())
+                        .status(InvestmentStatus.PENDING)
+                        .build()
+        );
+    }
+
 
     public PortfolioSummaryDto getInvestorPortfolio(String sortBy) {
 
@@ -487,7 +507,9 @@ public class InvestmentService {
         return totalCumul;
     }
 
-    public boolean hasInvested(String userId, Long scpiId) {
-        return investmentRepository.existsByUserEmailAndScpiId(userId, scpiId);
+    public boolean hasInvested(Long scpiId) {
+        String userEmail = userService.getEmail();
+        return investmentRepository.existsByUserEmailAndScpiId(userEmail, scpiId);
     }
+
 }

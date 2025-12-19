@@ -23,10 +23,10 @@ public class InvestmentRequestDTO {
     @NotNull
     InvestmentType investmentType;
 
-    @NotNull
+
     private BigDecimal numberOfShares;
 
-    @NotNull
+
     BigDecimal investmentAmount;
 
     @PositiveOrZero
@@ -38,5 +38,7 @@ public class InvestmentRequestDTO {
     private LocalDate scheduledPaymentDate;
 
     private BigDecimal monthlyAmount;
+
+    private BigDecimal numberOfSharesMonth;
 
 }

@@ -86,8 +86,11 @@ public class ScpiService {
         List<Investment> investments = investmentRepository.findByUserEmailAndScpiId(userEmail, id);
 
         BigDecimal totalInvestedAmount = investments.stream()
-                .map(Investment::getInvestmentAmount)
-                .filter(Objects::nonNull)
+                .map(inv -> {
+                    BigDecimal initial = inv.getInvestmentAmount() != null ? inv.getInvestmentAmount() : BigDecimal.ZERO;
+                    BigDecimal monthly = inv.getMonthlyAmount() != null ? inv.getMonthlyAmount() : BigDecimal.ZERO;
+                    return initial.add(monthly);
+                })
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         boolean hasInvested = !investments.isEmpty();
