@@ -20,7 +20,10 @@ import fr.checkconsulting.scpiinvapi.model.enums.InvestmentType;
 import fr.checkconsulting.scpiinvapi.repository.HistoryRepository;
 import fr.checkconsulting.scpiinvapi.repository.InvestmentRepository;
 import fr.checkconsulting.scpiinvapi.repository.ScpiRepository;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.math.MathContext;
@@ -35,6 +38,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 public class InvestmentService {
 
@@ -44,6 +48,7 @@ public class InvestmentService {
     private final InvestmentMapper investmentMapper;
     private final UserService userService;
     private final NotificationService notificationService;
+    private final DocumentService documentService;
 
     public InvestmentService(
             InvestmentRepository investmentRepository,
@@ -51,21 +56,38 @@ public class InvestmentService {
             ScpiRepository scpiRepository,
             InvestmentMapper investmentMapper,
             UserService userService,
-            NotificationService notificationService) {
+            NotificationService notificationService, DocumentService documentService) {
         this.investmentRepository = investmentRepository;
         this.historyRepository = historyRepository;
         this.scpiRepository = scpiRepository;
         this.investmentMapper = investmentMapper;
         this.userService = userService;
         this.notificationService = notificationService;
+        this.documentService = documentService;
     }
 
     public void createInvestment(InvestmentRequestDTO request) {
 
         String userEmail = userService.getEmail();
 
+
+        if (!documentService.areAllDocumentsValidated(userEmail)) {
+            log.warn("Tentative d'investissement bloquée : documents non validés pour {}", userEmail);
+            throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN,
+                    "REGULATORY_DOCUMENTS_REQUIRED"
+            );
+        }
+
+
         Scpi scpi = scpiRepository.findById(request.getScpiId())
-                .orElseThrow(() -> new IllegalArgumentException("SCPI non trouvée"));
+                .orElseThrow(() -> {
+                    log.error(
+                            "SCPI introuvable | scpiId={} | user={}",
+                            request.getScpiId(), userEmail
+                    );
+                    return new IllegalArgumentException("SCPI non trouvée");
+                });
 
         Investment investment = investmentMapper.toEntity(request);
         investment.setScpi(scpi);
@@ -80,6 +102,10 @@ public class InvestmentService {
         investment.setMonthlyAmount(request.getMonthlyAmount());
 
         Investment saved = investmentRepository.save(investment);
+        log.info(
+                "Investissement sauvegardé | investmentId={} | user={} | scpiId={}",
+                saved.getId(), userEmail, scpi.getId()
+        );
 
         History history = History.builder()
                 .investment(saved)
