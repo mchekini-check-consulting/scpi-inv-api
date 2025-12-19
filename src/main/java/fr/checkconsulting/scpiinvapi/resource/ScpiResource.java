@@ -74,7 +74,7 @@ public class ScpiResource {
                     description = "Liste des SCPI récupérée avec succès",
                     content = @Content(
                             mediaType = "application/json",
-                            schema = @Schema(implementation = ScpiWithRatesDTOResponse.class)
+                            schema = @Schema(implementation = ScpiWithRatesResponseDto.class)
                     )
             ),
             @ApiResponse(
@@ -89,7 +89,7 @@ public class ScpiResource {
             )
     })
     @GetMapping("/comparator-scpis")
-    public ResponseEntity<List<ScpiWithRatesDTOResponse>> getComparatorData() {
+    public ResponseEntity<List<ScpiWithRatesResponseDto>> getComparatorData() {
         return ResponseEntity.ok(scpiService.getAllForComparator());
     }
 
@@ -108,7 +108,7 @@ public class ScpiResource {
                     description = "Liste des SCPI récupérée avec succès",
                     content = @Content(
                             mediaType = "application/json",
-                            schema = @Schema(implementation = ScpiSimulatorDTOResponse.class)
+                            schema = @Schema(implementation = ScpiSimulatorResponseDto.class)
                     )
             ),
             @ApiResponse(
@@ -123,7 +123,7 @@ public class ScpiResource {
             )
     })
     @GetMapping("/scpis-full-ownership")
-    public List<ScpiSimulatorDTOResponse> getScpiSimulatorData() {
+    public List<ScpiSimulatorResponseDto> getScpiSimulatorData() {
         return scpiService.getScpiForSimulator();
     }
 

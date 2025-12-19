@@ -1,7 +1,7 @@
 package fr.checkconsulting.scpiinvapi.unit;
 
-import fr.checkconsulting.scpiinvapi.dto.response.DistributionRateChartResponse;
-import fr.checkconsulting.scpiinvapi.dto.response.DistributionRateDTOResponse;
+import fr.checkconsulting.scpiinvapi.dto.response.DistributionRateChartResponseDto;
+import fr.checkconsulting.scpiinvapi.dto.response.DistributionRateResponseDto;
 import fr.checkconsulting.scpiinvapi.mapper.DistributionRateMapper;
 import fr.checkconsulting.scpiinvapi.model.entity.DistributionRate;
 import fr.checkconsulting.scpiinvapi.repository.DistributionRateRepository;
@@ -43,8 +43,8 @@ public class DistributionRateServiceImplTest {
         );
 
 
-        List<DistributionRateDTOResponse> dtoList = distributionRates.stream()
-                .map(d -> DistributionRateDTOResponse.builder()
+        List<DistributionRateResponseDto> dtoList = distributionRates.stream()
+                .map(d -> DistributionRateResponseDto.builder()
                         .distributionYear(d.getDistributionYear())
                         .rate(d.getRate())
                         .build())
@@ -57,7 +57,7 @@ public class DistributionRateServiceImplTest {
         when(distributionRateMapper.toDtoList(distributionRates))
                 .thenReturn(dtoList);
 
-        DistributionRateChartResponse response = distributionRateService.findAllDistributionRateByScpiId(scpiId);
+        DistributionRateChartResponseDto response = distributionRateService.findAllDistributionRateByScpiId(scpiId);
 
         assertNotNull(response);
         assertEquals(3, response.getRates().size());
@@ -80,8 +80,8 @@ public class DistributionRateServiceImplTest {
         );
 
 
-        List<DistributionRateDTOResponse> dtoList = List.of(
-                DistributionRateDTOResponse.builder()
+        List<DistributionRateResponseDto> dtoList = List.of(
+                DistributionRateResponseDto.builder()
                         .distributionYear(2022)
                         .rate(BigDecimal.valueOf(4.5))
                         .build()
@@ -92,7 +92,7 @@ public class DistributionRateServiceImplTest {
         when(distributionRateMapper.toDtoList(distributionRates))
                 .thenReturn(dtoList);
 
-        DistributionRateChartResponse response = distributionRateService.findAllDistributionRateByScpiId(scpiId);
+        DistributionRateChartResponseDto response = distributionRateService.findAllDistributionRateByScpiId(scpiId);
 
         assertNotNull(response);
         assertTrue(response.isInsufficientHistory());

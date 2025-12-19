@@ -1,4 +1,4 @@
-package fr.checkconsulting.scpiinvapi.dto.request;
+package fr.checkconsulting.scpiinvapi.dto.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -8,13 +8,12 @@ import lombok.NoArgsConstructor;
 import java.math.BigDecimal;
 
 @Data
-@AllArgsConstructor
-@NoArgsConstructor
 @Builder
-public class DistributionRateDTORequest {
+@NoArgsConstructor
+@AllArgsConstructor
+public class DistributionRateResponseDto {
     private Long id;
     private Integer distributionYear;
     private BigDecimal rate;
     private Long scpiId;
-
 }

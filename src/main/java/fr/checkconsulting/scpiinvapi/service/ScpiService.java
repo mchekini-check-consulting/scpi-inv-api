@@ -1,6 +1,6 @@
 package fr.checkconsulting.scpiinvapi.service;
 
-import fr.checkconsulting.scpiinvapi.dto.response.ScpiWithRatesDTOResponse;
+import fr.checkconsulting.scpiinvapi.dto.response.ScpiWithRatesResponseDto;
 import fr.checkconsulting.scpiinvapi.dto.response.*;
 import fr.checkconsulting.scpiinvapi.mapper.ScpiMapper;
 import fr.checkconsulting.scpiinvapi.model.entity.DistributionRate;
@@ -112,20 +112,20 @@ public class ScpiService {
         return scpiMapper.toScpiRepartitionDto(scpi);
     }
 
-    public List<ScpiWithRatesDTOResponse> getAllForComparator() {
+    public List<ScpiWithRatesResponseDto> getAllForComparator() {
         log.info("Récupération de toutes les SCPI pour comparateur");
         return scpiRepository.findAll().stream()
                 .map(scpiMapper::toScpiWithRatesDTO)
                 .toList();
     }
 
-    public List<ScpiSimulatorDTOResponse> getScpiForSimulator() {
+    public List<ScpiSimulatorResponseDto> getScpiForSimulator() {
         log.info("Récupération des SCPI pour simulateur");
 
         return scpiRepository.findAll().stream()
                 .map(scpiMapper::toSimulatorDto)
                 .sorted(Comparator
-                        .<ScpiSimulatorDTOResponse, BigDecimal>comparing(
+                        .<ScpiSimulatorResponseDto, BigDecimal>comparing(
                                 dto -> dto.getYieldDistributionRate() != null ? dto.getYieldDistributionRate() : BigDecimal.ZERO)
                         .reversed())
                 .toList();

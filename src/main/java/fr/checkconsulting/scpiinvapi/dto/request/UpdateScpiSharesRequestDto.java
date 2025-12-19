@@ -14,7 +14,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class UpdateScpiSharesRequest {
+public class UpdateScpiSharesRequestDto {
     @NotNull
     @Min(1)
     @Schema(

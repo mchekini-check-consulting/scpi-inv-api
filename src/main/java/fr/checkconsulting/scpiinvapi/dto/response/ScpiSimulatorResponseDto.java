@@ -12,12 +12,12 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class SimulationResponseDTO {
+public class ScpiSimulatorResponseDto {
     private Long id;
     private String name;
-    private BigDecimal totalInvestment;
-    private BigDecimal totalAnnualReturn;
-    private List<SimulationScpiResponseDTO> items;
-    private List<RepartitionItemDto> locations;
+    private BigDecimal  yieldDistributionRate;
+    private BigDecimal sharePrice;
+    private Integer minimumSubscription;
     private List<RepartitionItemDto> sectors;
+    private List<RepartitionItemDto> locations;
 }

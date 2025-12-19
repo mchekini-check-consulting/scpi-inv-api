@@ -1,7 +1,7 @@
 package fr.checkconsulting.scpiinvapi.mapper;
 
-import fr.checkconsulting.scpiinvapi.dto.request.DistributionRateDTORequest;
-import fr.checkconsulting.scpiinvapi.dto.response.DistributionRateDTOResponse;
+import fr.checkconsulting.scpiinvapi.dto.request.DistributionRateRequestDto;
+import fr.checkconsulting.scpiinvapi.dto.response.DistributionRateResponseDto;
 import fr.checkconsulting.scpiinvapi.model.entity.DistributionRate;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -12,10 +12,10 @@ import java.util.List;
 public interface DistributionRateMapper {
 
     @Mapping(source = "scpi.id", target = "scpiId")
-    DistributionRateDTOResponse toDto(DistributionRate distributionRate);
+    DistributionRateResponseDto toDto(DistributionRate distributionRate);
 
     @Mapping(source = "scpiId", target = "scpi.id")
-    DistributionRate toEntity(DistributionRateDTORequest distributionRateDTORequest);
+    DistributionRate toEntity(DistributionRateRequestDto distributionRateRequestDTO);
 
-    List<DistributionRateDTOResponse> toDtoList(List<DistributionRate> distributionRates);
+    List<DistributionRateResponseDto> toDtoList(List<DistributionRate> distributionRates);
 }

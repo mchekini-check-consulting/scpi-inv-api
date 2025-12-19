@@ -1,11 +1,12 @@
 package fr.checkconsulting.scpiinvapi.resource;
 
-import fr.checkconsulting.scpiinvapi.dto.request.ScpiRevenuDTORequest;
+import fr.checkconsulting.scpiinvapi.dto.request.ScpiRevenuRequestDto;
 import fr.checkconsulting.scpiinvapi.dto.request.SimulationSaveRequestDto;
-import fr.checkconsulting.scpiinvapi.dto.request.UpdateScpiSharesRequest;
-import fr.checkconsulting.scpiinvapi.dto.response.FiscaliteDTOResponse;
-import fr.checkconsulting.scpiinvapi.dto.response.SimulationResponseDTO;
+import fr.checkconsulting.scpiinvapi.dto.request.UpdateScpiSharesRequestDto;
+import fr.checkconsulting.scpiinvapi.dto.response.FiscaliteResponseDto;
+import fr.checkconsulting.scpiinvapi.dto.response.SimulationResponseDto;
 import fr.checkconsulting.scpiinvapi.service.FiscaliteService;
+import fr.checkconsulting.scpiinvapi.service.SimulationExportPDFService;
 import fr.checkconsulting.scpiinvapi.service.SimulationService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -18,6 +19,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -27,12 +30,13 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/scpi/simulations")
 @RequiredArgsConstructor
-@Tag(name = "Simulation SCPI", description = "Endpoints pour gérer les simulations SCPI")
+@Tag(name = "simulation SCPI", description = "Endpoints pour gérer les simulations SCPI")
 
 public class SimulationResource {
 
     private final SimulationService simulationService;
     private final FiscaliteService fiscaliteService;
+    private final SimulationExportPDFService exportService;
 
 
     @PostMapping
@@ -46,7 +50,7 @@ public class SimulationResource {
                     description = "Simulation créée ou mise à jour avec succès",
                     content = @Content(
                             mediaType = "application/json",
-                            schema = @Schema(implementation = SimulationResponseDTO.class)
+                            schema = @Schema(implementation = SimulationResponseDto.class)
                     )
             ),
             @ApiResponse(
@@ -66,7 +70,7 @@ public class SimulationResource {
                     description = "Erreur interne lors de la sauvegarde de la simulation"
             )
     })
-    public ResponseEntity<SimulationResponseDTO> saveSimulation(
+    public ResponseEntity<SimulationResponseDto> saveSimulation(
             @Parameter(description = "Données de la simulation à créer ou mettre à jour", required = true)
             @RequestBody SimulationSaveRequestDto simulationSaveRequestDto
     ) {
@@ -86,7 +90,7 @@ public class SimulationResource {
                     content = @Content(
                             mediaType = "application/json",
                             array = @ArraySchema(
-                                    schema = @Schema(implementation = SimulationResponseDTO.class)
+                                    schema = @Schema(implementation = SimulationResponseDto.class)
                             )
                     )
             ),
@@ -99,8 +103,8 @@ public class SimulationResource {
                     description = "Erreur interne lors de la récupération des simulations"
             )
     })
-    public ResponseEntity<List<SimulationResponseDTO>> getAllSimulations() {
-        List<SimulationResponseDTO> simulations = simulationService.getAllSimulations();
+    public ResponseEntity<List<SimulationResponseDto>> getAllSimulations() {
+        List<SimulationResponseDto> simulations = simulationService.getAllSimulations();
         return ResponseEntity.ok(simulations);
     }
 
@@ -153,7 +157,7 @@ public class SimulationResource {
                     description = "SCPI supprimée et simulation mise à jour",
                     content = @Content(
                             mediaType = "application/json",
-                            schema = @Schema(implementation = SimulationResponseDTO.class)
+                            schema = @Schema(implementation = SimulationResponseDto.class)
                     )
             ),
             @ApiResponse(
@@ -173,7 +177,7 @@ public class SimulationResource {
                     description = "Erreur interne lors de la suppression de la SCPI"
             )
     })
-    public ResponseEntity<SimulationResponseDTO> deleteScpiFromSimulation(
+    public ResponseEntity<SimulationResponseDto> deleteScpiFromSimulation(
             @Parameter(description = "Identifiant de la simulation", required = true)
             @PathVariable Long simulationId,
             @Parameter(description = "Identifiant de la SCPI à supprimer", required = true)
@@ -200,14 +204,14 @@ public class SimulationResource {
             @ApiResponse(responseCode = "404", description = "Simulation ou SCPI introuvable")
     })
 
-    public SimulationResponseDTO updateScpiShares(
+    public SimulationResponseDto updateScpiShares(
             @Parameter(description = "Identifiant de la simulation", required = true)
             @PathVariable Long simulationId,
             @Parameter(description = "Identifiant de la SCPI", required = true)
             @PathVariable Long scpiId,
-            @Valid @RequestBody UpdateScpiSharesRequest payloadUpdateScpiSharesRequest
+            @Valid @RequestBody UpdateScpiSharesRequestDto payloadUpdateScpiSharesRequestDto
     ) {
-        return simulationService.updateScpiShares(simulationId, scpiId,payloadUpdateScpiSharesRequest.getShares());
+        return simulationService.updateScpiShares(simulationId, scpiId, payloadUpdateScpiSharesRequestDto.getShares());
     }
 
     @GetMapping("/{simulationId}")
@@ -227,7 +231,7 @@ public class SimulationResource {
                     description = "Détail de la simulation retourné avec succès",
                     content = @Content(
                             mediaType = "application/json",
-                            schema = @Schema(implementation = SimulationResponseDTO.class)
+                            schema = @Schema(implementation = SimulationResponseDto.class)
                     )
             ),
             @ApiResponse(
@@ -243,7 +247,7 @@ public class SimulationResource {
                     description = "Erreur interne lors de la récupération de la simulation"
             )
     })
-    public SimulationResponseDTO getSimulation(
+    public SimulationResponseDto getSimulation(
             @Parameter(description = "Identifiant unique de la simulation", required = true)
             @PathVariable Long simulationId) {
         return simulationService.getSimulationById(simulationId);
@@ -272,7 +276,7 @@ public class SimulationResource {
                     description = "Fiscalité calculée avec succès",
                     content = @Content(
                             mediaType = "application/json",
-                            schema = @Schema(implementation = FiscaliteDTOResponse.class)
+                            schema = @Schema(implementation = FiscaliteResponseDto.class)
                     )
             ),
             @ApiResponse(
@@ -288,7 +292,7 @@ public class SimulationResource {
                     description = "Erreur interne lors du calcul de la fiscalité"
             )
     })
-    public ResponseEntity<FiscaliteDTOResponse> calculFiscalite(
+    public ResponseEntity<FiscaliteResponseDto> calculFiscalite(
             @Parameter(
                     description = """
             Paramètres d’entrée pour le calcul de la fiscalité :
@@ -298,13 +302,66 @@ public class SimulationResource {
                     required = true
             )
 
-            @RequestBody ScpiRevenuDTORequest scpiRevenuDTORequest
+            @RequestBody ScpiRevenuRequestDto scpiRevenuRequestDTO
     ) {
-        FiscaliteDTOResponse fiscaliteDTOResponse = fiscaliteService.calculerFiscalite(
-                scpiRevenuDTORequest.getRevenuScpiBrut(),
-                scpiRevenuDTORequest.getLocations()
+        FiscaliteResponseDto fiscaliteResponseDto = fiscaliteService.calculerFiscalite(
+                scpiRevenuRequestDTO.getRevenuScpiBrut(),
+                scpiRevenuRequestDTO.getLocations()
         );
-        return ResponseEntity.ok(fiscaliteDTOResponse);
+        return ResponseEntity.ok(fiscaliteResponseDto);
+    }
+
+    @GetMapping("/{id}/export-pdf")
+    @Operation(
+            summary = "Exporter une simulation SCPI en PDF",
+            description = """
+            Génère et télécharge un document PDF récapitulatif d’une simulation SCPI.
+
+            Le PDF contient notamment :
+            - les informations générales de la simulation
+            - la liste des SCPI avec montants investis et revenus
+            - la répartition géographique (France / Europe)
+            - la synthèse fiscale détaillée (impôt, prélèvements sociaux, revenu net)
+            - le rendement net après fiscalité
+
+            Le document est généré dynamiquement à partir des données courantes
+            de la simulation et de la fiscalité associée.
+            """
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "PDF généré et téléchargé avec succès",
+                    content = @Content(
+                            mediaType = "application/pdf",
+                            schema = @Schema(type = "string", format = "binary")
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "Simulation introuvable"
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "Utilisateur non authentifié"
+            ),
+            @ApiResponse(
+                    responseCode = "500",
+                    description = "Erreur interne lors de la génération du PDF"
+            )
+    })
+    public ResponseEntity<byte[]> export(
+            @Parameter(description = "Identifiant unique de la simulation à exporter",required = true)
+            @PathVariable Long id) {
+
+
+        byte[] pdf = exportService.exportSimulationPdf(id);
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION,
+                        "attachment; filename=simulation-" + id + ".pdf")
+                .contentType(MediaType.APPLICATION_PDF)
+                .body(pdf);
     }
 }
 

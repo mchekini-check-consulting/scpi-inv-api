@@ -12,7 +12,7 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class SimulationScpiResponseDTO {
+public class SimulationScpiResponseDto {
     private Long id;
     private Long scpiId;
     private String scpiName;

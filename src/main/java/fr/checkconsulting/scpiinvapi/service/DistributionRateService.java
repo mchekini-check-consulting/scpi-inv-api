@@ -1,7 +1,7 @@
 package fr.checkconsulting.scpiinvapi.service;
 
-import fr.checkconsulting.scpiinvapi.dto.response.DistributionRateChartResponse;
-import fr.checkconsulting.scpiinvapi.dto.response.DistributionRateDTOResponse;
+import fr.checkconsulting.scpiinvapi.dto.response.DistributionRateChartResponseDto;
+import fr.checkconsulting.scpiinvapi.dto.response.DistributionRateResponseDto;
 import fr.checkconsulting.scpiinvapi.mapper.DistributionRateMapper;
 import fr.checkconsulting.scpiinvapi.model.entity.DistributionRate;
 import fr.checkconsulting.scpiinvapi.repository.DistributionRateRepository;
@@ -25,7 +25,7 @@ public class DistributionRateService {
         this.distributionRateMapper = distributionRateMapper;
     }
 
-    public DistributionRateChartResponse findAllDistributionRateByScpiId(Long scpiId) {
+    public DistributionRateChartResponseDto findAllDistributionRateByScpiId(Long scpiId) {
         log.info("Récupération des taux de distribution pour SCPI id={}", scpiId);
 
         List<DistributionRate> distributionRates =
@@ -37,28 +37,28 @@ public class DistributionRateService {
             log.debug("Nombre de taux de distribution trouvés pour SCPI id={} : {}", scpiId, distributionRates.size());
         }
 
-        List<DistributionRateDTOResponse> distributionRateDTOResponses = distributionRateMapper.toDtoList(distributionRates);
+        List<DistributionRateResponseDto> distributionRateResponsDtos = distributionRateMapper.toDtoList(distributionRates);
 
-        boolean insufficientHistory = distributionRateDTOResponses.size() < 2;
-        double distribRateAvg3Years = calculateAverageLast3Years(distributionRateDTOResponses);
+        boolean insufficientHistory = distributionRateResponsDtos.size() < 2;
+        double distribRateAvg3Years = calculateAverageLast3Years(distributionRateResponsDtos);
 
         log.debug("SCPI id={} - historique insuffisant={} - moyenne 3 ans={}",
                 scpiId, insufficientHistory, distribRateAvg3Years);
 
-        return DistributionRateChartResponse.builder()
-                .rates(distributionRateDTOResponses)
+        return DistributionRateChartResponseDto.builder()
+                .rates(distributionRateResponsDtos)
                 .avg3Years(distribRateAvg3Years)
                 .insufficientHistory(insufficientHistory)
                 .build();
     }
 
-    private double calculateAverageLast3Years(List<DistributionRateDTOResponse> rates) {
+    private double calculateAverageLast3Years(List<DistributionRateResponseDto> rates) {
         if (rates.size() < 3) {
             return 0.0;
         }
 
         List<BigDecimal> last3Rates = rates.subList(rates.size() - 3, rates.size()).stream()
-                .map(DistributionRateDTOResponse::getRate)
+                .map(DistributionRateResponseDto::getRate)
                 .filter(Objects::nonNull)
                 .toList();
 

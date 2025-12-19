@@ -2,7 +2,7 @@ package fr.checkconsulting.scpiinvapi.service;
 
 import fr.checkconsulting.scpiinvapi.dto.request.SimulationSaveRequestDto;
 import fr.checkconsulting.scpiinvapi.dto.request.SimulationScpiLineRequestDto;
-import fr.checkconsulting.scpiinvapi.dto.response.SimulationResponseDTO;
+import fr.checkconsulting.scpiinvapi.dto.response.SimulationResponseDto;
 import fr.checkconsulting.scpiinvapi.mapper.SimulationMapper;
 import fr.checkconsulting.scpiinvapi.model.entity.Scpi;
 import fr.checkconsulting.scpiinvapi.model.entity.Simulation;
@@ -33,19 +33,26 @@ public class SimulationService {
     private final SimulationMapper simulationMapper;
 
     @Transactional
-    public SimulationResponseDTO saveSimulation(SimulationSaveRequestDto request) {
+    public SimulationResponseDto saveSimulation(SimulationSaveRequestDto request) {
 
         String userEmail = userService.getEmail();
         log.info("Début sauvegarde simulation | user={} | simulationId={}",
                 userEmail, request.getId());
 
-        Simulation simulation = request.getId() == null
-                ? Simulation.builder()
-                .userEmail(userEmail)
-                .name(request.getName())
-                .build()
-                : simulationRepository.findByIdAndUserEmail(request.getId(), userEmail)
-                .orElseThrow(() -> new EntityNotFoundException("Simulation introuvable"));
+        Simulation simulation;
+
+        if (request.getId() == null) {
+            simulation = Simulation.builder()
+                    .userEmail(userEmail)
+                    .name(request.getName())
+                    .build();
+        } else {
+            simulation = simulationRepository
+                    .findByIdAndUserEmail(request.getId(), userEmail)
+                    .orElseThrow(() -> new EntityNotFoundException("Simulation introuvable"));
+
+            simulation.setName(request.getName());
+        }
 
         if (simulation.getItems() == null) {
             simulation.setItems(new ArrayList<>());
@@ -106,7 +113,7 @@ public class SimulationService {
     }
 
     @Transactional
-    public Optional<SimulationResponseDTO> deleteScpi(Long simulationId, Long scpiId) {
+    public Optional<SimulationResponseDto> deleteScpi(Long simulationId, Long scpiId) {
 
         String userEmail = userService.getEmail();
         log.info("Suppression SCPI de la simulation | simulationId={} | scpiId={} | user={}",
@@ -149,7 +156,7 @@ public class SimulationService {
     }
 
     @Transactional
-    public SimulationResponseDTO updateScpiShares(Long simulationId, Long scpiId, int shares) {
+    public SimulationResponseDto updateScpiShares(Long simulationId, Long scpiId, int shares) {
 
         String userEmail = userService.getEmail();
         log.info("Mise à jour parts SCPI | simulationId={} | scpiId={} | shares={} | user={}",
@@ -209,7 +216,7 @@ public class SimulationService {
 
 
     @Transactional
-    public SimulationResponseDTO getSimulationById(Long simulationId) {
+    public SimulationResponseDto getSimulationById(Long simulationId) {
         String userEmail = userService.getEmail();
         log.info("Consultation simulation | id={} | user={}", simulationId, userEmail);
 
@@ -225,7 +232,7 @@ public class SimulationService {
     }
 
 
-    public List<SimulationResponseDTO> getAllSimulations() {
+    public List<SimulationResponseDto> getAllSimulations() {
         String userEmail = userService.getEmail();
         log.info("Récupération simulations | user={}", userEmail);
         List<Simulation> simulations =
@@ -236,6 +243,7 @@ public class SimulationService {
         return simulationMapper.toDtoList(simulations);
     }
 
+    @Transactional
     public void deleteSimulation(Long simulationId) {
         String userEmail = userService.getEmail();
         log.info("Suppression simulation | id={} | user={}", simulationId, userEmail);
@@ -250,6 +258,17 @@ public class SimulationService {
         log.info("Simulation supprimée | id={} | user={}", simulationId, userEmail);
 
     }
+
+    @Transactional
+    public Simulation getSimulationEntityById(Long simulationId) {
+
+        String userEmail = userService.getEmail();
+
+        return simulationRepository
+                .findByIdAndUserEmail(simulationId, userEmail)
+                .orElseThrow(() -> new EntityNotFoundException("Simulation introuvable"));
+    }
+
 }
 
 

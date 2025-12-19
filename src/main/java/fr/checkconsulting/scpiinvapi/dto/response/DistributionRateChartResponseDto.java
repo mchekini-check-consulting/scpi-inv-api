@@ -7,8 +7,8 @@ import java.util.List;
 
 @Data
 @Builder
-public class DistributionRateChartResponse {
-    private List<DistributionRateDTOResponse> rates;
+public class DistributionRateChartResponseDto {
+    private List<DistributionRateResponseDto> rates;
     private Double avg3Years;
     private boolean insufficientHistory;
 }

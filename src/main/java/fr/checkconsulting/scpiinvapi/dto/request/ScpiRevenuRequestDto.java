@@ -16,7 +16,6 @@ import java.util.List;
 @NoArgsConstructor
 @Builder
 @Schema(
-        name = "ScpiRevenuDTORequest",
         description = """
             Payload envoyé par le frontend pour calculer la fiscalité d’un portefeuille SCPI.
             
@@ -25,13 +24,13 @@ import java.util.List;
             - la répartition géographique des investissements (France / Europe)
             """
 )
-public class ScpiRevenuDTORequest {
+public class ScpiRevenuRequestDto {
     @NotNull
     @Schema(
             description = "Revenu annuel brut issu des SCPI (avant toute fiscalité)"
     )
     private BigDecimal revenuScpiBrut;
     
-    @Schema(name = "RepartitionItemDto",description = "Représente un pays et son pourcentage d’exposition dans le portefeuille SCPI")
+    @Schema(description = "Représente un pays et son pourcentage d’exposition dans le portefeuille SCPI")
     private List<RepartitionItemDto> locations;
 }

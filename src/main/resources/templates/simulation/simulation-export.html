@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Synthèse Simulation SCPI</title>
+
+    <style>
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 12px;
+            color: #0f172a;
+            margin: 24px;
+        }
+
+        h1 {
+            color: #155eef;
+            font-size: 20px;
+            margin-bottom: 2px;
+        }
+
+        h2 {
+            font-size: 15px;
+            margin-top: 26px;
+            margin-bottom: 8px;
+            border-bottom: 1px solid #e2e8f0;
+            padding-bottom: 4px;
+            color: #0f172a;
+        }
+
+        .meta {
+            font-size: 11px;
+            color: #475569;
+            margin-bottom: 20px;
+        }
+
+
+        .card {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 12px;
+            margin-bottom: 16px;
+        }
+
+        .row {
+            width: 100%;
+            clear: both;
+            margin-bottom: 6px;
+        }
+
+        .label {
+            float: left;
+            color: #475569;
+        }
+
+        .value {
+            float: right;
+            font-weight: bold;
+        }
+
+        .highlight {
+            color: #155eef;
+        }
+
+        .positive {
+            color: #5B9F5A;
+            font-weight: bold;
+        }
+
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 8px;
+        }
+
+        th {
+            background: #f1f5f9;
+            border: 1px solid #cbd5f5;
+            padding: 8px;
+            text-align: left;
+            font-size: 11px;
+            color: #0f172a;
+        }
+
+        td {
+            border: 1px solid #e2e8f0;
+            padding: 8px;
+            font-size: 11px;
+        }
+
+        td.number {
+            text-align: right;
+        }
+
+
+        .footer {
+            margin-top: 30px;
+            font-size: 10px;
+            color: #64748b;
+            text-align: center;
+            border-top: 1px solid #e2e8f0;
+            padding-top: 10px;
+        }
+    </style>
+</head>
+<body>
+
+<h1 th:text="${export.simulationName}">Simulation SCPI</h1>
+<div class="meta">
+    Généré le
+    <span th:text="${#temporals.format(export.generatedAt, 'dd/MM/yyyy HH:mm')}"></span>
+</div>
+
+<h2>Synthèse de l’investissement</h2>
+
+<div class="card">
+    <div class="row">
+        <span class="label">Total investi</span>
+        <span class="value"
+              th:text="${#numbers.formatDecimal(export.totalInvestment,1,'NONE',2,'POINT')} + ' €'"></span>
+    </div>
+
+    <div class="row">
+        <span class="label">Rendement annuel brut</span>
+        <span class="value"
+              th:text="${#numbers.formatDecimal(export.totalAnnualReturn,1,'NONE',2,'POINT')} + ' €'"></span>
+    </div>
+
+    <div class="row">
+        <span class="label">Revenu net après fiscalité</span>
+        <span class="value highlight"
+              th:text="${#numbers.formatDecimal(export.netRevenueAfterTax,1,'NONE',2,'POINT')} + ' €'"></span>
+    </div>
+</div>
+
+
+<h2>SCPI sélectionnées</h2>
+
+<table>
+    <thead>
+    <tr>
+        <th>SCPI</th>
+        <th>Parts</th>
+        <th>Montant investi (€)</th>
+        <th>Rendement annuel (€)</th>
+        <th>Taux (%)</th>
+        <th>Zone</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="name, iter : ${export.scpiNames}">
+        <td th:text="${name}"></td>
+        <td class="number" th:text="${export.scpiShares[iter.index]}"></td>
+        <td class="number"
+            th:text="${#numbers.formatDecimal(export.scpiInvestedAmounts[iter.index],1,'NONE',2,'POINT')}"></td>
+        <td class="number"
+            th:text="${#numbers.formatDecimal(export.scpiAnnualReturns[iter.index],1,'NONE',2,'POINT')}"></td>
+        <td class="number"
+            th:text="${#numbers.formatDecimal(export.scpiDistributionRates[iter.index],1,'NONE',2,'POINT')}"></td>
+        <td th:text="${export.scpiLocalisations[iter.index]}"></td>
+    </tr>
+    </tbody>
+</table>
+
+
+<h2>Fiscalité</h2>
+
+<table>
+    <tr>
+        <th>Impôt total</th>
+        <td class="number"
+            th:text="${#numbers.formatDecimal(export.fiscalite.impotTotal,1,'NONE',2,'POINT')} + ' €'"></td>
+    </tr>
+    <tr>
+        <th>Prélèvements sociaux</th>
+        <td class="number"
+            th:text="${#numbers.formatDecimal(export.fiscalite.prelevementsSociaux,1,'NONE',2,'POINT')} + ' €'"></td>
+    </tr>
+    <tr>
+        <th>Taux moyen d’imposition</th>
+        <td class="number"
+            th:text="${#numbers.formatDecimal(export.fiscalite.tauxMoyen,1,'NONE',2,'POINT')} + ' %'"></td>
+    </tr>
+</table>
+
+
+<h2>Impact de la SCPI sur votre revenu</h2>
+
+<div class="card">
+    <div class="row">
+        <span class="label">Revenu avant SCPI</span>
+        <span class="value"
+              th:text="${#numbers.formatDecimal(export.revenuAvantScpi,1,'NONE',2,'POINT')} + ' €'"></span>
+    </div>
+
+    <div class="row">
+        <span class="label">Revenu après SCPI</span>
+        <span class="value highlight"
+              th:text="${#numbers.formatDecimal(export.revenuApresScpi,1,'NONE',2,'POINT')} + ' €'"></span>
+    </div>
+
+    <div class="row">
+        <span class="label">Gain net annuel lié à la SCPI</span>
+        <span class="value positive"
+              th:text="'+' + ${#numbers.formatDecimal(export.gainNet,1,'NONE',2,'POINT')} + ' €'"></span>
+    </div>
+</div>
+
+
+<div class="footer">
+    Document généré automatiquement – Simulation SCPI Invest +<br/>
+</div>
+
+</body>
+</html>
