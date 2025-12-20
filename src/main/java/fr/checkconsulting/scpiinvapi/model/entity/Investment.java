@@ -36,6 +36,8 @@ public class Investment {
     private PaymentType paymentType;
     private LocalDate scheduledPaymentDate;
     private BigDecimal monthlyAmount;
+    private BigDecimal numberOfSharesMonth;
+
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "scpi_id")

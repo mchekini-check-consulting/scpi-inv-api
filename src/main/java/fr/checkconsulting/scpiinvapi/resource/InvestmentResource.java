@@ -79,9 +79,8 @@ public class InvestmentResource {
 
     @GetMapping("/hasinvested")
     public ResponseEntity<Boolean> hasInvested(@RequestParam("scpiId") long scpiId) {
-        String userId = userService.getUserId();
-        boolean result = investmentService.hasInvested(userId, scpiId);
-        return ResponseEntity.ok(result);
+        boolean result = investmentService.hasInvested(scpiId);
+        return ResponseEntity.ok().body(result);
     }
 
 
