@@ -13,7 +13,6 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 @Builder
 @Schema(
-        name = "FiscaliteDTOResponse",
         description = """
             Résultat du calcul de fiscalité SCPI pour un investisseur.
             
@@ -24,7 +23,7 @@ import java.math.BigDecimal;
             - le revenu net après fiscalité
             """
 )
-public class FiscaliteDTOResponse {
+public class FiscaliteResponseDto {
     @Schema(description = "Revenu annuel du profil avant intégration des revenus SCPI")
     private BigDecimal revenuProfil;
 
@@ -42,6 +41,13 @@ public class FiscaliteDTOResponse {
 
     @Schema(description = "Indique si la tranche marginale d’imposition a changé suite à l’investissement")
     private boolean tmiChanged;
+
+    @Schema(description = "Montant de l’impôt sur le revenu du profil AVANT intégration des SCPI")
+    private BigDecimal impotProfilAvantScpi;
+
+    @Schema(description = "Revenu net annuel du profil AVANT intégration des SCPI")
+    private BigDecimal revenuNetAvantScpi;
+
 
     @Schema(description = "Montant total de l’impôt estimé (impôt sur le revenu lié aux SCPI)")
     private BigDecimal impotTotal;

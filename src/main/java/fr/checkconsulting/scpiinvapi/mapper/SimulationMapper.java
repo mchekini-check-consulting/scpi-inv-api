@@ -1,8 +1,8 @@
 package fr.checkconsulting.scpiinvapi.mapper;
 
 import fr.checkconsulting.scpiinvapi.dto.response.RepartitionItemDto;
-import fr.checkconsulting.scpiinvapi.dto.response.SimulationResponseDTO;
-import fr.checkconsulting.scpiinvapi.dto.response.SimulationScpiResponseDTO;
+import fr.checkconsulting.scpiinvapi.dto.response.SimulationResponseDto;
+import fr.checkconsulting.scpiinvapi.dto.response.SimulationScpiResponseDto;
 import fr.checkconsulting.scpiinvapi.model.entity.Simulation;
 import fr.checkconsulting.scpiinvapi.model.entity.SimulationScpi;
 import org.mapstruct.Mapper;
@@ -16,16 +16,16 @@ public interface SimulationMapper {
     @Mapping(target = "items", source = "items")
     @Mapping(target = "locations", expression = "java(mapLocations(simulation.getItems()))")
     @Mapping(target = "sectors", expression = "java(mapSectors(simulation.getItems()))")
-    SimulationResponseDTO toDto(Simulation simulation);
+    SimulationResponseDto toDto(Simulation simulation);
 
 
     @Mapping(target = "scpiId", source = "scpi.id")
     @Mapping(target = "scpiName", source = "scpi.name")
     @Mapping(target = "locations", expression = "java(mapItemLocations(simulationScpi))")
     @Mapping(target = "sectors", expression = "java(mapItemSectors(simulationScpi))")
-    SimulationScpiResponseDTO toItemDto(SimulationScpi simulationScpi);
+    SimulationScpiResponseDto toItemDto(SimulationScpi simulationScpi);
 
-    List<SimulationResponseDTO> toDtoList(List<Simulation> simulations);
+    List<SimulationResponseDto> toDtoList(List<Simulation> simulations);
 
     default List<RepartitionItemDto> mapLocations(List<SimulationScpi> items) {
         if (items == null || items.isEmpty()) return List.of();

@@ -1,6 +1,6 @@
 package fr.checkconsulting.scpiinvapi.resource;
 
-import fr.checkconsulting.scpiinvapi.dto.response.DistributionRateChartResponse;
+import fr.checkconsulting.scpiinvapi.dto.response.DistributionRateChartResponseDto;
 import fr.checkconsulting.scpiinvapi.service.DistributionRateService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -19,8 +19,8 @@ public class DistributionRateResource {
     }
 
     @GetMapping("/{id}/distribution-rates")
-    public ResponseEntity<DistributionRateChartResponse> getDistributionRatesChart(@PathVariable Long id) {
-        DistributionRateChartResponse response = distributionRateService.findAllDistributionRateByScpiId(id);
+    public ResponseEntity<DistributionRateChartResponseDto> getDistributionRatesChart(@PathVariable Long id) {
+        DistributionRateChartResponseDto response = distributionRateService.findAllDistributionRateByScpiId(id);
         return ResponseEntity.ok(response);
     }
 

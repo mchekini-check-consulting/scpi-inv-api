@@ -1,11 +1,10 @@
 package fr.checkconsulting.scpiinvapi.mapper;
 
-import fr.checkconsulting.scpiinvapi.dto.response.ScpiWithRatesDTOResponse;
+import fr.checkconsulting.scpiinvapi.dto.response.ScpiWithRatesResponseDto;
 import fr.checkconsulting.scpiinvapi.dto.response.*;
 import fr.checkconsulting.scpiinvapi.model.entity.*;
 import org.mapstruct.*;
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
@@ -127,14 +126,13 @@ public interface ScpiMapper {
                 .collect(java.util.stream.Collectors.toList());
     }
 
-    ScpiWithRatesDTOResponse toScpiWithRatesDTO(Scpi scpi);
+    ScpiWithRatesResponseDto toScpiWithRatesDTO(Scpi scpi);
 
     @Mapping(target = "yieldDistributionRate", source = ".", qualifiedByName = "latestYield")
     @Mapping(target = "sharePrice",           source = ".", qualifiedByName = "latestSharePrice")
     @Mapping(target = "sectors",              source = "sectors", qualifiedByName = "toRepartitionItems")
     @Mapping(target = "locations",            source = "locations", qualifiedByName = "mapLocationsToRepartition")
-
-    ScpiSimulatorDTOResponse toSimulatorDto(Scpi scpi);
+    ScpiSimulatorResponseDto toSimulatorDto(Scpi scpi);
 
     @Named("latestYield")
     default BigDecimal latestYield(Scpi scpi) {
