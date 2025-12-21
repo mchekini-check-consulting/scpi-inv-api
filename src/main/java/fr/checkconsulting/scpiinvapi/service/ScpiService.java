@@ -1,6 +1,6 @@
 package fr.checkconsulting.scpiinvapi.service;
 
-import fr.checkconsulting.scpiinvapi.dto.response.ScpiWithRatesResponseDto;
+import fr.checkconsulting.scpiinvapi.dto.request.ScpiSearchCriteriaDto;
 import fr.checkconsulting.scpiinvapi.dto.response.*;
 import fr.checkconsulting.scpiinvapi.mapper.ScpiMapper;
 import fr.checkconsulting.scpiinvapi.model.entity.DistributionRate;
@@ -8,15 +8,18 @@ import fr.checkconsulting.scpiinvapi.model.entity.Investment;
 import fr.checkconsulting.scpiinvapi.model.entity.Scpi;
 import fr.checkconsulting.scpiinvapi.model.entity.ScpiPartValues;
 import fr.checkconsulting.scpiinvapi.repository.InvestmentRepository;
+import fr.checkconsulting.scpiinvapi.repository.LocationRepository;
 import fr.checkconsulting.scpiinvapi.repository.ScpiRepository;
+import fr.checkconsulting.scpiinvapi.repository.SectorRepository;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Objects;
 
 @Service
 @Transactional(readOnly = true)
@@ -24,25 +27,22 @@ import java.util.Objects;
 public class ScpiService {
 
     private final ScpiRepository scpiRepository;
+    private final SectorRepository sectorRepository;
+    private final LocationRepository locationRepository;
     private final ScpiMapper scpiMapper;
     private final UserService userService;
     private final InvestmentRepository investmentRepository;
 
     public ScpiService(ScpiRepository scpiRepository,
-                       ScpiMapper scpiMapper,
+                       SectorRepository sectorRepository, LocationRepository locationRepository, ScpiMapper scpiMapper,
                        UserService userService,
                        InvestmentRepository investmentRepository) {
         this.scpiRepository = scpiRepository;
+        this.sectorRepository = sectorRepository;
+        this.locationRepository = locationRepository;
         this.scpiMapper = scpiMapper;
         this.userService = userService;
         this.investmentRepository = investmentRepository;
-    }
-
-    public List<ScpiSummaryDto> getAllScpi() {
-        log.info("Récupération de toutes les SCPI");
-        List<Scpi> scpis = scpiRepository.findAll();
-        log.debug("Nombre de SCPI trouvées: {}", scpis.size());
-        return scpiMapper.toScpiSummaryDto(scpis);
     }
 
     public ScpiDetailDto getScpiDetails(String name, String manager) {
@@ -161,4 +161,18 @@ public class ScpiService {
                 .map(scpiMapper::toScpiSummaryDto)
                 .toList();
     }
+
+    public Page<ScpiSummaryDto> searchScpi(ScpiSearchCriteriaDto criteria, int page, int size) {
+        log.info("Recherche SCPI avec critères: {}", criteria);
+
+        Page<Scpi> scpiPage = scpiRepository.search(criteria, page, size);
+        List<ScpiSummaryDto> dtos = scpiMapper.toScpiSummaryDto(scpiPage.getContent());
+
+        return new PageImpl<>(dtos, scpiPage.getPageable(), scpiPage.getTotalElements());
+    }
+
+    public ScpiFiltersOptionsDto getScpiFiltersOptions(){
+        return new ScpiFiltersOptionsDto(sectorRepository.findDistinctNames(),locationRepository.findDistinctCountries(), scpiRepository.findRentFrequencies());
+    }
+
 }
