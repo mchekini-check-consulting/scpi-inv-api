@@ -18,10 +18,6 @@ import org.springframework.stereotype.Repository;
 import java.util.ArrayList;
 import java.util.List;
 
-interface ScpiRepositoryCustom {
-    Page<Scpi> search(ScpiSearchCriteriaDto criteria, int page, int size);
-}
-
 @Repository
 public class ScpiRepositoryImpl implements ScpiRepositoryCustom {
 
