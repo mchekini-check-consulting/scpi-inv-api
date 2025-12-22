@@ -89,8 +89,12 @@ public class FiscaliteService {
                 impotProfilFinal
         );
 
+        BigDecimal revenuScpiImposable = revenuScpiBrut != null
+                ? revenuScpiBrut
+                : BigDecimal.ZERO;
 
-        BigDecimal revenuGlobal = revenuProfil.add(revenuScpiBrut != null ? revenuScpiBrut : BigDecimal.ZERO);
+        BigDecimal revenuGlobal = revenuProfil.add(revenuScpiImposable);
+
         BigDecimal quotientGlobal = revenuGlobal.divide(nombreParts, 2, RoundingMode.HALF_UP);
         int newTmi = determinerTMI(quotientGlobal);
 
@@ -112,11 +116,11 @@ public class FiscaliteService {
                 .max(BigDecimal.ZERO)
                 .setScale(2, RoundingMode.HALF_UP);
 
-        log.info(
-                "Impôt sans enfants={} | impôt avec enfants={} | avantage théorique={} | plafond={} | avantage retenu={} | impot final={}",
-                impotSansEnfants, impotAvecEnfants, avantageEnfants, plafondAvantage, avantageRetenu, impotTotal
-        );
+        log.info("Impôt sans enfants={} | impôt avec enfants={} | avantage théorique={} | plafond={} | avantage retenu={} | impot final={}", impotSansEnfants, impotAvecEnfants, avantageEnfants, plafondAvantage, avantageRetenu, impotTotal);
 
+        BigDecimal impotScpi = impotTotal.subtract(impotProfilFinal).max(BigDecimal.ZERO).setScale(2, RoundingMode.HALF_UP);
+
+        log.info("Impôt sur le revenu généré par les SCPI = {}", impotScpi);
 
         log.info("Revenu global={} , quotientGlobal={} , nouvel TMI={} , impotTotal={}", revenuGlobal, quotientGlobal, newTmi, impotTotal);
 
@@ -131,22 +135,37 @@ public class FiscaliteService {
         );
 
         BigDecimal prelevementsSociaux = BigDecimal.ZERO;
+
         if (revenuScpiBrut != null && locations != null) {
             for (RepartitionItemDto loc : locations) {
                 log.info("localisation={} avec pourcentage={}", loc.getLabel(), loc.getPercentage());
 
                 if ("France".equalsIgnoreCase(loc.getLabel())) {
                     BigDecimal partFrance = revenuScpiBrut.multiply(loc.getPercentage().divide(BigDecimal.valueOf(100), 4, RoundingMode.HALF_UP));
-                    prelevementsSociaux = partFrance.multiply(PRELEVEMENTS_SOCIAUX_FRANCE).setScale(2, RoundingMode.HALF_UP);
+
+                    prelevementsSociaux = prelevementsSociaux.add(partFrance.multiply(PRELEVEMENTS_SOCIAUX_FRANCE));
+
                     log.info("Part française trouvée={} , prélèvements sociaux={}", partFrance, prelevementsSociaux);
-                    break;
+
                 }
             }
         }
         else {
             log.info("Aucun revenu SCPI ou aucune localisation fournie");
         }
+        prelevementsSociaux = prelevementsSociaux.setScale(2, RoundingMode.HALF_UP);
         log.info("Prélèvements sociaux totaux={}", prelevementsSociaux);
+
+        BigDecimal revenuScpiNet = BigDecimal.ZERO;
+
+        if (revenuScpiBrut != null) {
+            revenuScpiNet = revenuScpiBrut
+                    .subtract(impotScpi)
+                    .subtract(prelevementsSociaux)
+                    .setScale(2, RoundingMode.HALF_UP);
+        }
+
+        log.info("Revenu SCPI annuel NET après fiscalité = {}", revenuScpiNet);
 
         BigDecimal revenuNetApresFiscalite = revenuGlobal.subtract(impotTotal.add(prelevementsSociaux));
 
@@ -184,6 +203,8 @@ public class FiscaliteService {
                 .impotProfilAvantScpi(impotProfilFinal)
                 .revenuNetAvantScpi(revenuNetAvantScpi)
                 .impotTotal(impotTotal)
+                .impotScpi(impotScpi)
+                .revenuScpiNet(revenuScpiNet)
                 .prelevementsSociaux(prelevementsSociaux)
                 .revenuNetApresFiscalite(revenuNetApresFiscalite)
                 .tauxMoyen(tauxMoyen)

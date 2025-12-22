@@ -74,4 +74,11 @@ public class FiscaliteResponseDto {
                 - false : fiscalité Europe
                 """)
     private boolean isFrench;
+
+    @Schema(description = "Impôt sur le revenu généré uniquement par les SCPI")
+    private BigDecimal impotScpi;
+
+    @Schema(description = "Revenu annuel SCPI net après IR et prélèvements sociaux")
+    private BigDecimal revenuScpiNet;
+
 }
