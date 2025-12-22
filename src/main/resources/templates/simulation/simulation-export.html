@@ -145,7 +145,7 @@
         <th>Montant investi (€)</th>
         <th>Rendement annuel (€)</th>
         <th>Taux (%)</th>
-        <th>Zone</th>
+        <th>Zone géographique</th>
     </tr>
     </thead>
     <tbody>
@@ -168,9 +168,11 @@
 
 <table>
     <tr>
-        <th>Impôt total</th>
+        <th>Impôt sur les revenus SCPI</th>
         <td class="number"
-            th:text="${#numbers.formatDecimal(export.fiscalite.impotTotal,1,'NONE',2,'POINT')} + ' €'"></td>
+            th:text="${#numbers.formatDecimal(export.fiscalite.impotScpi,1,'NONE',2,'POINT')} + ' €'">
+        </td>
+
     </tr>
     <tr>
         <th>Prélèvements sociaux</th>
@@ -178,7 +180,7 @@
             th:text="${#numbers.formatDecimal(export.fiscalite.prelevementsSociaux,1,'NONE',2,'POINT')} + ' €'"></td>
     </tr>
     <tr>
-        <th>Taux moyen d’imposition</th>
+        <th>Taux moyen d’imposition SCPI</th>
         <td class="number"
             th:text="${#numbers.formatDecimal(export.fiscalite.tauxMoyen,1,'NONE',2,'POINT')} + ' %'"></td>
     </tr>
