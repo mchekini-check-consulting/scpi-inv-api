@@ -39,35 +39,27 @@ public class ProfileResource {
 
     @PostMapping
     public ResponseEntity<ProfileDtoResponse> create(@Valid @RequestBody ProfileRequest req) {
-        ProfileDtoResponse response = service.createProfile(req);
+        ProfileDtoResponse response = service.saveOrUpdateProfile(req);
         return ResponseEntity.ok(response);
 
     }
-
-
     @Operation(
-            summary = "Mettre à jour un profil",
-            description = "Cette API permet de mettre à jour un profil existant à partir de son identifiant. "
-                    + "Tous les champs doivent être fournis dans le corps de la requête."
+            summary = "Récupérer le profil de l'utilisateur",
+            description = "Cette API permet de récupérer le profil de l'utilisateur. "
     )
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Profil mis à jour avec succès",
+            @ApiResponse(responseCode = "200", description = "Profil récupéré avec succès",
                     content = @Content(schema = @Schema(implementation = ProfileDtoResponse.class))),
-            @ApiResponse(responseCode = "400", description = "Requête invalide, paramètres manquants ou invalides",
+            @ApiResponse(responseCode = "400", description = "Requête invalide",
                     content = @Content),
-            @ApiResponse(responseCode = "404", description = "Profil non trouvé pour l'identifiant fourni",
-                    content = @Content),
-            @ApiResponse(responseCode = "500", description = "Erreur serveur lors de la mise à jour du profil",
+            @ApiResponse(responseCode = "500", description = "Erreur serveur lors de la récupération du profil",
                     content = @Content)
     })
 
-    @PutMapping("/{id}")
-    public ResponseEntity<ProfileDtoResponse> updateProfile(
-            @PathVariable Long id,
-            @Valid @RequestBody ProfileRequest req) {
+    @GetMapping
+    public ResponseEntity<ProfileDtoResponse> getProfile() {
+        return ResponseEntity.ok(service.getProfile());
 
-        ProfileDtoResponse updated = service.updateProfile(id, req);
-        return ResponseEntity.ok(updated);
     }
 
 }

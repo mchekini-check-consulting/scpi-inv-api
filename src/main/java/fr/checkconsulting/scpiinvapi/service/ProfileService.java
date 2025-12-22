@@ -11,6 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.util.Optional;
 
 @Slf4j
 @Service
@@ -24,30 +25,6 @@ public class ProfileService {
         this.repo = repo;
         this.userService = userService;
         this.profileMapper = profileMapper;
-    }
-
-    public ProfileDtoResponse createProfile(ProfileRequest profilereq) {
-        log.info("Création d'un profil avec status={} enfants={} revenuInvestisseur={} revenuConjoint={}",
-                profilereq.getStatus(),
-                profilereq.getChildren(),
-                profilereq.getIncomeInvestor(),
-                profilereq.getIncomeConjoint());
-
-        validateProfileRequest(profilereq);
-
-        Profile profile = new Profile();
-        profile.setStatus(profilereq.getStatus());
-        profile.setChildren(profilereq.getChildren());
-        profile.setIncomeInvestor(profilereq.getIncomeInvestor());
-        profile.setEmail(userService.getEmail());
-
-        boolean hasConjoint = isConjointRequired(profilereq.getStatus());
-        profile.setIncomeConjoint(hasConjoint ? profilereq.getIncomeConjoint() : null);
-
-        Profile saved = repo.save(profile);
-        log.info("Profil créé avec id={}", saved.getId());
-
-        return toResponse(saved);
     }
 
     private void validateProfileRequest(ProfileRequest profilereq) {
@@ -87,27 +64,45 @@ public class ProfileService {
         return resp;
     }
 
-    public ProfileDtoResponse updateProfile(Long id, ProfileRequest req) {
-        String userEmail = userService.getEmail();
+    public ProfileDtoResponse saveOrUpdateProfile(ProfileRequest req) {
 
-        Profile existing = repo.findById(id)
-                .orElseThrow(() -> new IllegalStateException("Profil non trouvé"));
+        String email = userService.getEmail();
 
-        if (!existing.getEmail().equals(userEmail)) {
-            throw new SecurityException("Vous ne pouvez pas modifier ce profil");
+        Optional<Profile> existingOpt = repo.findByEmail(email);
+
+        Profile profile;
+
+        if (existingOpt.isPresent()) {
+            profile = existingOpt.get();
+            log.info("Mise à jour du profil existant id={}", profile.getId());
+        } else {
+            profile = new Profile();
+            profile.setEmail(email);
+            log.info("Création d’un nouveau profil pour {}", email);
         }
 
-        boolean hasConjoint = req.getStatus() == MaritalStatus.MARIE
-                || req.getStatus() == MaritalStatus.PACSE;
+        validateProfileRequest(req);
 
-        existing.setStatus(req.getStatus());
-        existing.setChildren(req.getChildren());
-        existing.setIncomeInvestor(req.getIncomeInvestor());
-        existing.setIncomeConjoint(hasConjoint ? req.getIncomeConjoint() : null);
+        boolean hasConjoint = isConjointRequired(req.getStatus());
 
-        Profile saved = repo.save(existing);
+        profile.setStatus(req.getStatus());
+        profile.setChildren(req.getChildren());
+        profile.setIncomeInvestor(req.getIncomeInvestor());
+        profile.setIncomeConjoint(hasConjoint ? req.getIncomeConjoint() : null);
+
+        Profile saved = repo.save(profile);
+
         return profileMapper.toResponse(saved);
     }
 
-}
+    public ProfileDtoResponse getProfile() {
+        Optional<Profile> profileOptional = repo.findByEmail(userService.getEmail());
 
+        if(profileOptional.isPresent()){
+            return profileMapper.toResponse(profileOptional.get());
+        } else {
+            return new ProfileDtoResponse();
+        }
+    }
+
+}
