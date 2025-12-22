@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8"/>
-    <title>Rapport d'Erreurs d'Importation SCPI</title>
+    <title>Rapport d’erreurs du traitement batch d’importation SCPI</title>
 
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -165,8 +165,8 @@
         thead th {
             text-align: left;
             padding: 14px 12px;
-            background-color: #cfe2ff; /* couleur claire du header */
-            color: #0f172a; /* texte sombre pour contraste */
+            background-color: #cfe2ff;
+            color: #0f172a;
             font-size: 12px;
             font-weight: 700;
             text-transform: uppercase;
@@ -253,7 +253,7 @@
 <div class="header">
     <div class="brand">
         <h1>Rapport d'Erreurs d'Importation SCPI</h1>
-        <div class="subtitle">Fait par SCPI Importer</div>
+        <div class="subtitle">Généré automatiquement par le batch d’importation SCPI</div>
     </div>
 
     <div class="meta">
@@ -269,19 +269,19 @@
 </div>
 
 <div class="summary">
-    <div class="summary-title">RESUME DU TRAITEMENT</div>
+    <div class="summary-title">RÉSUMÉ DU TRAITEMENT BATCH</div>
     <div class="cards-container">
         <div class="card total">
             <div class="num" th:text="${totalLines}">52</div>
-            <div class="label">Total lignes</div>
+            <div class="label">Total des lignes</div>
         </div>
         <div class="card success">
             <div class="num" th:text="${successCount}">48</div>
-            <div class="label">Reussies</div>
+            <div class="label">Réussies</div>
         </div>
         <div class="card failed">
             <div class="num" th:text="${failedCount}">4</div>
-            <div class="label">Echouées</div>
+            <div class="label">Échouées</div>
         </div>
         <div class="card rate" th:if="${failureRate != null}">
             <div class="num" th:text="${failureRate} + '%'">7.7%</div>
@@ -291,14 +291,14 @@
 </div>
 
 <div class="errors-section">
-    <div class="section-title">DETAILS DES ERREURS</div>
+    <div class="section-title">DÉTAILS DES ERREURS</div>
 
     <table>
         <thead>
         <tr>
-            <th style="width: 180px;">Type d'érreur</th>
-            <th style="width: 100px;">Numéro ligne</th>
-            <th>Message d'érreur</th>
+            <th style="width: 180px;">Type d'erreur</th>
+            <th style="width: 100px;">Numéro de ligne</th>
+            <th>Message d'erreur</th>
         </tr>
         </thead>
         <tbody>
@@ -311,7 +311,7 @@
                 <span class="line-number" th:text="${err.lineNumber}">0</span>
             </td>
             <td>
-                <div class="message" th:text="${err.message}">Message d'érreur détaille</div>
+                <div class="message" th:text="${err.message}">Message d'erreur détaillé</div>
             </td>
         </tr>
         </tbody>
@@ -320,10 +320,10 @@
 
 <div class="footer">
     <div class="footer-line">
-        <strong>Rapport genere le :</strong> <span th:text="${reportDate}">2025-10-30T21:23:25</span>
+        <strong>Rapport généré le :</strong> <span th:text="${reportDate}">2025-10-30T21:23:25</span>
     </div>
     <div class="footer-line">
-        SCPI Importer - Systeme de traitement par lots
+        SCPI Invest + Système de traitement par lots
     </div>
 </div>
 

@@ -25,5 +25,5 @@ public class FiscalConstants {
             new BigDecimal("0.45")
     );
 
-    public static final BigDecimal VALEUR_DEMI_PART_ENFANT = new BigDecimal("1751");
+    public static final BigDecimal VALEUR_DEMI_PART_ENFANT = new BigDecimal("1791");
 }
