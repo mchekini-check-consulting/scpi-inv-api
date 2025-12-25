@@ -9,6 +9,8 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("api/v1")
 public class ApplicationResource {
 
+    private String a;
+
     @Value("${app.name:DemoApplication}")
     private String appName;
 
